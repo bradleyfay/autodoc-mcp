@@ -4,12 +4,12 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
 
-import httpx
 from structlog import get_logger
 
 from ..config import get_config
 from ..exceptions import NetworkError, PackageNotFoundError
 from ..models import PackageInfo
+from .network_resilience import NetworkResilientClient
 
 logger = get_logger(__name__)
 
@@ -34,46 +34,45 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
     def __init__(self, semaphore: asyncio.Semaphore | None = None):
         self.config = get_config()
         self.semaphore = semaphore or asyncio.Semaphore(self.config.max_concurrent)
-        self._client: httpx.AsyncClient | None = None
+        self._resilient_client: NetworkResilientClient | None = None
 
     async def __aenter__(self) -> "PyPIDocumentationFetcher":
-        self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(self.config.request_timeout), follow_redirects=True
-        )
+        self._resilient_client = NetworkResilientClient()
+        await self._resilient_client.__aenter__()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        if self._client:
-            await self._client.aclose()
+        if self._resilient_client:
+            await self._resilient_client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def fetch_package_info(self, package_name: str) -> PackageInfo:
-        """Fetch package information from PyPI JSON API."""
+        """Fetch package information from PyPI JSON API with network resilience."""
         async with self.semaphore:
             url = f"{self.config.pypi_base_url}/{package_name}/json"
 
             logger.info("Fetching package info", package=package_name, url=url)
 
-            if self._client is None:
+            if self._resilient_client is None:
                 raise RuntimeError(
                     "Client not initialized. Use 'async with' context manager."
                 )
 
             try:
-                response = await self._client.get(url)
-                response.raise_for_status()
+                response = await self._resilient_client.get_with_retry(
+                    url, headers={"Accept": "application/json"}
+                )
                 data = response.json()
 
                 return self._parse_pypi_response(data)
 
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    raise PackageNotFoundError(
-                        f"Package '{package_name}' not found on PyPI"
-                    ) from e
-                raise NetworkError(f"PyPI API error: {e.response.status_code}") from e
-
-            except httpx.RequestError as e:
-                raise NetworkError(f"Network error fetching {package_name}: {e}") from e
+            except PackageNotFoundError:
+                logger.error("Package not found on PyPI", package=package_name)
+                raise
+            except NetworkError as e:
+                logger.error(
+                    "Network error fetching package", package=package_name, error=str(e)
+                )
+                raise
 
     def format_documentation(
         self, package_info: PackageInfo, query: str | None = None
