@@ -11,6 +11,7 @@ from structlog import get_logger
 
 from ..exceptions import CacheError
 from ..models import CacheEntry, PackageInfo
+from .error_formatter import ErrorFormatter, ErrorSeverity, FormattedError
 
 logger = get_logger(__name__)
 
@@ -151,3 +152,64 @@ class FileCacheManager(CacheManagerInterface):
         except OSError as e:
             logger.error("Failed to get cache stats", error=str(e))
             return {"error": str(e)}
+
+    def get_cached_entry_safe(
+        self, cache_key: str
+    ) -> tuple[CacheEntry | None, list[FormattedError]]:
+        """Get cached entry with error handling."""
+        errors: list[FormattedError] = []
+
+        try:
+            cache_file = self.cache_dir / f"{cache_key}.json"
+
+            if not cache_file.exists():
+                return None, errors
+
+            # Check if cache file is corrupted
+            try:
+                with cache_file.open("r", encoding="utf-8") as f:
+                    content = f.read().strip()
+
+                if not content:
+                    # Empty cache file
+                    cache_file.unlink()  # Remove corrupted file
+                    errors.append(
+                        FormattedError(
+                            message=f"Corrupted cache file removed: {cache_key}",
+                            suggestion="The cache file was empty and has been cleaned up automatically.",
+                            severity=ErrorSeverity.INFO,
+                            error_code="cache_corruption_fixed",
+                        )
+                    )
+                    return None, errors
+
+                data = json.loads(content)
+
+                # Parse the cached data back to models
+                package_info = PackageInfo(**data["data"])
+                cache_entry = CacheEntry(
+                    data=package_info,
+                    timestamp=datetime.fromisoformat(data["timestamp"]),
+                    version=data["version"],
+                )
+                return cache_entry, errors
+
+            except json.JSONDecodeError:
+                # Corrupted JSON file
+                cache_file.unlink()
+                errors.append(
+                    FormattedError(
+                        message=f"Corrupted cache file removed: {cache_key}",
+                        suggestion="The cache file was corrupted and has been cleaned up automatically.",
+                        severity=ErrorSeverity.WARNING,
+                        error_code="cache_corruption_fixed",
+                    )
+                )
+                return None, errors
+
+        except Exception as e:
+            formatted_error = ErrorFormatter.format_exception(
+                e, {"cache_key": cache_key, "operation": "cache_retrieval"}
+            )
+            errors.append(formatted_error)
+            return None, errors

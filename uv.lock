@@ -47,8 +47,8 @@ wheels = [
 ]
 
 [[package]]
-name = "autodocs-mcp"
-version = "0.1.4"
+name = "autodoc-mcp"
+version = "0.1.7"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
