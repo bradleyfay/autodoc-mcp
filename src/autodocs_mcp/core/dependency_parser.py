@@ -122,17 +122,23 @@ class PyProjectParser(DependencyParserInterface):
     def _parse_dependency_list_safe(
         self, deps: list[str], source: str
     ) -> tuple[list[DependencySpec], list[dict[str, Any]]]:
-        """Parse dependency list with error collection."""
+        """Parse dependency list with enhanced error context."""
         parsed_deps = []
         failed_deps = []
 
-        for dep_str in deps:
+        for i, dep_str in enumerate(deps):
             try:
                 spec = self._parse_dependency_string(dep_str, source)
                 parsed_deps.append(spec)
             except ValueError as e:
                 failed_deps.append(
-                    {"dependency_string": dep_str, "error": str(e), "source": source}
+                    {
+                        "dependency_string": dep_str,
+                        "error": str(e),
+                        "source": source,
+                        "line_index": i,  # Add position info
+                        "raw_error": str(e),  # Preserve original error
+                    }
                 )
                 continue  # Keep processing other deps
 
