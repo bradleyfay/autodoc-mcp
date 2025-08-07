@@ -1,6 +1,5 @@
 """Unit tests for dependency parser."""
 
-
 import pytest
 
 from autodocs_mcp.core.dependency_parser import PyProjectParser
