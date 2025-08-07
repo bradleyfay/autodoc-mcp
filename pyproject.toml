@@ -35,6 +35,11 @@ dev = [
 [project.scripts]
 autodocs-mcp = "autodocs_mcp.main:main"
 
+[project.urls]
+Homepage = "https://github.com/bradleyfay/autodoc-mcp"
+Repository = "https://github.com/bradleyfay/autodoc-mcp.git"
+Issues = "https://github.com/bradleyfay/autodoc-mcp/issues"
+
 [tool.hatch.envs.default]
 dependencies = [
     "pytest",
@@ -50,6 +55,18 @@ lint = "ruff check {args:src tests}"
 format = "ruff format {args:src tests}"
 typecheck = "mypy {args:src}"
 dev = "python src/autodocs_mcp/main.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autodocs_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/README.md",
+  "/LICENSE",
+  "/CHANGELOG.md"
+]
 
 [tool.ruff]
 target-version = "py311"
