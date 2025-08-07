@@ -2,6 +2,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Any
 
 import httpx
 from structlog import get_logger
@@ -21,7 +22,9 @@ class DocumentationFetcherInterface(ABC):
         """Fetch package information from external source."""
 
     @abstractmethod
-    def format_documentation(self, package_info: PackageInfo, query: str | None = None) -> str:
+    def format_documentation(
+        self, package_info: PackageInfo, query: str | None = None
+    ) -> str:
         """Format package info for AI consumption."""
 
 
@@ -33,13 +36,13 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         self.semaphore = semaphore or asyncio.Semaphore(self.config.max_concurrent)
         self._client: httpx.AsyncClient | None = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "PyPIDocumentationFetcher":
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(self.config.request_timeout), follow_redirects=True
         )
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self._client:
             await self._client.aclose()
 
@@ -50,6 +53,11 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
 
             logger.info("Fetching package info", package=package_name, url=url)
 
+            if self._client is None:
+                raise RuntimeError(
+                    "Client not initialized. Use 'async with' context manager."
+                )
+
             try:
                 response = await self._client.get(url)
                 response.raise_for_status()
@@ -59,13 +67,17 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
 
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 404:
-                    raise PackageNotFoundError(f"Package '{package_name}' not found on PyPI")
-                raise NetworkError(f"PyPI API error: {e.response.status_code}")
+                    raise PackageNotFoundError(
+                        f"Package '{package_name}' not found on PyPI"
+                    ) from e
+                raise NetworkError(f"PyPI API error: {e.response.status_code}") from e
 
             except httpx.RequestError as e:
-                raise NetworkError(f"Network error fetching {package_name}: {e}")
+                raise NetworkError(f"Network error fetching {package_name}: {e}") from e
 
-    def format_documentation(self, package_info: PackageInfo, query: str | None = None) -> str:
+    def format_documentation(
+        self, package_info: PackageInfo, query: str | None = None
+    ) -> str:
         """Format package info for AI consumption with optional query filtering."""
         sections = []
 
@@ -108,7 +120,7 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
 
         return formatted
 
-    def _parse_pypi_response(self, data: dict[str, any]) -> PackageInfo:
+    def _parse_pypi_response(self, data: dict[str, Any]) -> PackageInfo:
         """Parse PyPI JSON response into PackageInfo model."""
         info = data.get("info", {})
 

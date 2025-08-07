@@ -1,9 +1,11 @@
 """File-based cache manager for package documentation."""
 
+import contextlib
 import json
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from structlog import get_logger
 
@@ -70,10 +72,8 @@ class FileCacheManager(CacheManagerInterface):
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning("Corrupted cache entry", cache_key=cache_key, error=str(e))
             # Remove corrupted cache file
-            try:
+            with contextlib.suppress(OSError):
                 cache_file.unlink()
-            except OSError:
-                pass
             return None
 
     async def set(self, cache_key: str, package_info: PackageInfo) -> None:
@@ -103,7 +103,7 @@ class FileCacheManager(CacheManagerInterface):
             )
 
         except (OSError, TypeError) as e:
-            raise CacheError(f"Failed to cache {cache_key}: {e}")
+            raise CacheError(f"Failed to cache {cache_key}: {e}") from e
 
     async def invalidate(self, cache_key: str | None = None) -> None:
         """Invalidate specific cache entry or entire cache."""
@@ -114,7 +114,11 @@ class FileCacheManager(CacheManagerInterface):
                     cache_file.unlink()
                     logger.info("Invalidated cache entry", cache_key=cache_key)
             except OSError as e:
-                logger.warning("Failed to invalidate cache entry", cache_key=cache_key, error=str(e))
+                logger.warning(
+                    "Failed to invalidate cache entry",
+                    cache_key=cache_key,
+                    error=str(e),
+                )
         else:
             # Clear entire cache
             try:
@@ -123,7 +127,7 @@ class FileCacheManager(CacheManagerInterface):
                 logger.info("Cleared entire cache", cache_dir=str(self.cache_dir))
             except OSError as e:
                 logger.error("Failed to clear cache", error=str(e))
-                raise CacheError(f"Failed to clear cache: {e}")
+                raise CacheError(f"Failed to clear cache: {e}") from e
 
     async def list_cached_packages(self) -> list[str]:
         """List all cached package keys."""
@@ -133,7 +137,7 @@ class FileCacheManager(CacheManagerInterface):
             logger.error("Failed to list cached packages", error=str(e))
             return []
 
-    async def get_cache_stats(self) -> dict[str, any]:
+    async def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         try:
             cache_files = list(self.cache_dir.glob("*.json"))

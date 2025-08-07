@@ -1,7 +1,6 @@
 """Version resolution for converting constraints to specific versions."""
 
 import httpx
-from packaging import version
 from packaging.specifiers import SpecifierSet
 from structlog import get_logger
 
@@ -28,19 +27,27 @@ class VersionResolver:
         """
         config = get_config()
 
-        async with httpx.AsyncClient(timeout=httpx.Timeout(config.request_timeout)) as client:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(config.request_timeout)
+        ) as client:
             try:
-                response = await client.get(f"{config.pypi_base_url}/{package_name}/json")
+                response = await client.get(
+                    f"{config.pypi_base_url}/{package_name}/json"
+                )
                 response.raise_for_status()
                 data = response.json()
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 404:
-                    raise PackageNotFoundError(f"Package '{package_name}' not found on PyPI")
-                raise NetworkError(f"PyPI API error: {e.response.status_code}")
+                    raise PackageNotFoundError(
+                        f"Package '{package_name}' not found on PyPI"
+                    ) from e
+                raise NetworkError(f"PyPI API error: {e.response.status_code}") from e
             except httpx.RequestError as e:
-                raise NetworkError(f"Network error resolving {package_name}: {e}")
+                raise NetworkError(
+                    f"Network error resolving {package_name}: {e}"
+                ) from e
 
-        latest_version = data["info"]["version"]
+        latest_version: str = data["info"]["version"]
 
         if constraint is None:
             logger.info(

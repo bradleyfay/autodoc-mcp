@@ -45,7 +45,7 @@ class PyProjectParser(DependencyParserInterface):
         dependencies = []
         failed_deps = []
         warnings = []
-        errors = []
+        errors: list[str] = []
 
         try:
             content = pyproject_path.read_text(encoding="utf-8")
