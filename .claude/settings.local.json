@@ -4,5 +4,9 @@
       "Bash(mkdir:*)"
     ],
     "deny": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "autodocs-mcp"
+  ],
+  "enableAllProjectMcpServers": true
 }

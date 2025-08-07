@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autodocs-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server for automatic Python package documentation context"
 authors = [{name = "AutoDocs Team", email = "team@autodocs.dev"}]
 license = {text = "MIT"}
@@ -18,7 +18,7 @@ dependencies = [
     "structlog>=23.2.0",
     "packaging>=23.0",  # For version constraint parsing
     "requests>=2.28.0",  # NEW: Adding requests to test detection
-    "click[completion]>=8.0.0",  # NEW: Adding click with extras
+    "click>=8.0.0",  # NEW: Adding click
 ]
 
 [project.optional-dependencies]
