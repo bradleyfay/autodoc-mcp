@@ -1,11 +1,11 @@
 """Version resolution for converting constraints to specific versions."""
 
-import httpx
 from packaging.specifiers import SpecifierSet
 from structlog import get_logger
 
 from ..config import get_config
 from ..exceptions import NetworkError, PackageNotFoundError
+from .network_resilience import NetworkResilientClient
 
 logger = get_logger(__name__)
 
@@ -16,7 +16,7 @@ class VersionResolver:
     @staticmethod
     async def resolve_version(package_name: str, constraint: str | None = None) -> str:
         """
-        Resolve version constraint to specific version.
+        Resolve version constraint to specific version with network resilience.
 
         Args:
             package_name: Package to resolve
@@ -27,25 +27,21 @@ class VersionResolver:
         """
         config = get_config()
 
-        async with httpx.AsyncClient(
-            timeout=httpx.Timeout(config.request_timeout)
-        ) as client:
+        async with NetworkResilientClient() as client:
             try:
-                response = await client.get(
-                    f"{config.pypi_base_url}/{package_name}/json"
+                response = await client.get_with_retry(
+                    f"{config.pypi_base_url}/{package_name}/json",
+                    headers={"Accept": "application/json"},
                 )
-                response.raise_for_status()
                 data = response.json()
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    raise PackageNotFoundError(
-                        f"Package '{package_name}' not found on PyPI"
-                    ) from e
-                raise NetworkError(f"PyPI API error: {e.response.status_code}") from e
-            except httpx.RequestError as e:
-                raise NetworkError(
-                    f"Network error resolving {package_name}: {e}"
-                ) from e
+            except PackageNotFoundError:
+                logger.error("Package not found", package=package_name)
+                raise
+            except NetworkError as e:
+                logger.error(
+                    "Failed to resolve version", package=package_name, error=str(e)
+                )
+                raise
 
         latest_version: str = data["info"]["version"]
 

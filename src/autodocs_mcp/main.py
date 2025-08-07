@@ -14,8 +14,9 @@ from .config import get_config
 from .core.cache_manager import FileCacheManager
 from .core.dependency_parser import PyProjectParser
 from .core.doc_fetcher import PyPIDocumentationFetcher
+from .core.error_formatter import ErrorFormatter, ResponseFormatter
 from .core.version_resolver import VersionResolver
-from .exceptions import AutoDocsError
+from .exceptions import AutoDocsError, ProjectParsingError
 
 structlog.configure(
     processors=[
@@ -54,8 +55,11 @@ async def scan_dependencies(project_path: str | None = None) -> dict[str, Any]:
         return {
             "success": False,
             "error": {
-                "type": "InitializationError",
                 "message": "Parser not initialized",
+                "suggestion": "Try again or restart the MCP server",
+                "severity": "critical",
+                "code": "service_not_initialized",
+                "recoverable": False,
             },
         }
 
@@ -65,43 +69,31 @@ async def scan_dependencies(project_path: str | None = None) -> dict[str, Any]:
 
         result = await parser.parse_project(path)
 
-        return {
-            "success": True,
-            "partial_success": result.partial_success,
-            "project_path": str(result.project_path),
-            "project_name": result.project_name,
-            "dependencies": [
-                {
-                    "name": dep.name,
-                    "version_constraint": dep.version_constraint,
-                    "extras": dep.extras,
-                    "source": dep.source,
-                }
-                for dep in result.dependencies
-            ],
-            "scan_timestamp": result.scan_timestamp.isoformat(),
-            "successful_deps": result.successful_deps,
-            "total_dependencies": len(result.dependencies),
-            "failed_deps": result.failed_deps,
-            "warnings": result.warnings,
-            "errors": result.errors,
-        }
+        # Use ResponseFormatter for consistent error formatting
+        return ResponseFormatter.format_scan_response(result)
 
-    except AutoDocsError as e:
-        logger.error(
-            "Dependency scanning failed", error=str(e), error_type=type(e).__name__
-        )
-        return {
-            "success": False,
-            "error": {"type": type(e).__name__, "message": str(e)},
-        }
-    except Exception as e:
-        logger.error("Unexpected error during dependency scanning", error=str(e))
+    except ProjectParsingError as e:
+        formatted_error = ErrorFormatter.format_exception(e)
         return {
             "success": False,
             "error": {
-                "type": "UnexpectedError",
-                "message": f"An unexpected error occurred: {str(e)}",
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
+            },
+        }
+    except Exception as e:
+        formatted_error = ErrorFormatter.format_exception(e)
+        return {
+            "success": False,
+            "error": {
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
             },
         }
 
@@ -125,8 +117,11 @@ async def get_package_docs(
         return {
             "success": False,
             "error": {
-                "type": "InitializationError",
                 "message": "Services not initialized",
+                "suggestion": "Try again or restart the MCP server",
+                "severity": "critical",
+                "code": "service_not_initialized",
+                "recoverable": False,
             },
         }
 
@@ -185,6 +180,7 @@ async def get_package_docs(
         }
 
     except AutoDocsError as e:
+        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
         logger.error(
             "Documentation fetch failed",
             package=package_name,
@@ -193,15 +189,25 @@ async def get_package_docs(
         )
         return {
             "success": False,
-            "error": {"type": type(e).__name__, "message": str(e)},
+            "error": {
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
+            },
         }
     except Exception as e:
+        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
         logger.error("Unexpected error during documentation fetch", error=str(e))
         return {
             "success": False,
             "error": {
-                "type": "UnexpectedError",
-                "message": f"An unexpected error occurred: {str(e)}",
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
             },
         }
 
@@ -218,8 +224,11 @@ async def refresh_cache() -> dict[str, Any]:
         return {
             "success": False,
             "error": {
-                "type": "InitializationError",
                 "message": "Cache manager not initialized",
+                "suggestion": "Try again or restart the MCP server",
+                "severity": "critical",
+                "code": "service_not_initialized",
+                "recoverable": False,
             },
         }
 
@@ -248,10 +257,17 @@ async def refresh_cache() -> dict[str, Any]:
         }
 
     except AutoDocsError as e:
+        formatted_error = ErrorFormatter.format_exception(e)
         logger.error("Cache refresh failed", error=str(e))
         return {
             "success": False,
-            "error": {"type": type(e).__name__, "message": str(e)},
+            "error": {
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
+            },
         }
 
 
@@ -267,8 +283,11 @@ async def get_cache_stats() -> dict[str, Any]:
         return {
             "success": False,
             "error": {
-                "type": "InitializationError",
                 "message": "Cache manager not initialized",
+                "suggestion": "Try again or restart the MCP server",
+                "severity": "critical",
+                "code": "service_not_initialized",
+                "recoverable": False,
             },
         }
 
@@ -284,12 +303,18 @@ async def get_cache_stats() -> dict[str, Any]:
         }
 
     except Exception as e:
+        formatted_error = ErrorFormatter.format_exception(
+            e, {"operation": "get_cache_stats"}
+        )
         logger.error("Failed to get cache stats", error=str(e))
         return {
             "success": False,
             "error": {
-                "type": "CacheError",
-                "message": f"Failed to get cache stats: {str(e)}",
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
             },
         }
 
