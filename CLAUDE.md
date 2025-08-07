@@ -126,28 +126,35 @@ MCP server configuration:
 
 ### Git Branching Strategy
 
-This project uses **GitHub Flow** with feature branches and squash merging:
+This project uses **GitFlow with Release Branches** for flexible development and bundled releases:
 
-- **`main` branch**: Production-ready code, always deployable
-- **Feature branches**: `feature/description` or `fix/description` for all changes
-- **Release process**: Squash-merge feature branches into main, then tag for release
+#### Branch Hierarchy:
+- **`main`** - Production-ready code, source of truth, tagged releases only
+- **`develop`** - Integration branch for ongoing development work
+- **`feature/*`** - Individual features/changes, branched from `develop`
+- **`release/v0.x.x`** - Release preparation, branched from `develop`
 
-#### Workflow Steps:
-1. Create feature branch from `main`: `git checkout -b feature/add-new-feature`
-2. Make commits with conventional commit messages (see below)
-3. Push feature branch: `git push -u origin feature/add-new-feature`
-4. **Create Pull Request on GitHub** - All changes must go through PR review
-5. **Wait for PR approval** - No direct commits to `main` branch allowed
-6. **Squash-merge** PR into `main` (this creates a single commit)
-7. Tag the squashed commit for releases: `git tag v1.2.3`
-8. Push tags to trigger CI/CD deployment: `git push --tags`
+#### Daily Development Workflow:
+1. **Work on develop**: Most development happens directly on `develop` branch
+2. **Feature branches (optional)**: For larger changes, create `feature/description` from `develop`
+3. **Merge features**: `feature/*` → `develop` (via PR or direct merge)
+4. **Rapid iteration**: Small changes can be committed directly to `develop`
 
-#### Pull Request Requirements:
-- **Mandatory PR review** - All feature branches must be merged via GitHub Pull Request
-- **No direct commits to `main`** - Main branch should be protected with branch protection rules
-- **PR title must follow conventional commits** - Use same format as commit messages
-- **Include clear description** - Explain what changes were made and why
-- **Link related issues** - Reference any GitHub issues being addressed
+#### Release Workflow:
+1. **Prepare release**: `git checkout -b release/v0.x.x` from `develop`
+2. **Version bump**: Update version in `pyproject.toml` on release branch
+3. **Final tweaks**: Bug fixes, documentation updates in release branch
+4. **Deploy**: Push `release/v0.x.x` → triggers CI/CD → PyPI deployment
+5. **Complete release**:
+   - Merge `release/v0.x.x` → `main`
+   - Tag release on `main`: `git tag v0.x.x`
+   - Merge `release/v0.x.x` → `develop` (to sync any release fixes)
+
+#### Benefits:
+- **Rapid development** on `develop` without deployment pressure
+- **Bundle changes** by choosing what goes into each release
+- **`main` stays clean** with only completed, tested releases
+- **No accidental deployments** from development work
 
 ### Commit Message Standards
 
@@ -237,11 +244,20 @@ This project strictly follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 When working in this repository, you MUST:
 
-1. **Always use conventional commits** - Every commit message must follow the conventional commits specification
-2. **Update CHANGELOG.md with every version bump** - Add entries following Keep a Changelog format
-3. **Use feature branches with mandatory PRs** - Never commit directly to main branch, all changes must go through GitHub Pull Request review
+1. **Work primarily on `develop` branch** - Most development happens on `develop`, not `main`
+2. **Always use conventional commits** - Every commit message must follow the conventional commits specification
+3. **Use release branches for deployment** - Only `release/v0.x.x` branches trigger PyPI deployment
 4. **Follow SemVer** - Version bumps must match the type of changes made
-5. **Require PR approval** - All Pull Requests must be reviewed and approved before merging
+5. **Update CHANGELOG.md with releases** - Add entries when creating release branches
+
+### Branch Management for Development
+
+**MANDATORY**: Before making any code changes, you MUST:
+
+1. **Check current branch**: Always run `git branch` or `git status` first
+2. **Default to develop branch**: Most work should happen on `develop` branch
+3. **Create feature branch for large changes**: For significant features, create `feature/description` from `develop`
+4. **Never commit directly to main** - `main` is only for completed releases
 
 ### Commit Message Examples
 

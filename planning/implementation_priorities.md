@@ -46,7 +46,7 @@ Implementation priorities are a strategic ordering of development tasks based on
    - Implement `scan_dependencies` tool only
    - Test with real pyproject.toml files
 
-**Success Criteria**: 
+**Success Criteria**:
 - Can scan dependencies from real Python projects
 - MCP tool responds correctly in Cursor integration
 - Basic error handling works
@@ -180,7 +180,7 @@ Building incrementally validates your architectural decisions:
 ### ✅ **Parallel Development Opportunities**
 Once Priority 2 is complete:
 - One developer can work on graceful degradation (Priority 3)
-- Another can start on dependency context (Priority 4)  
+- Another can start on dependency context (Priority 4)
 - Testing can begin in parallel with feature development
 
 ## Alternative: Feature-Complete Approach (Not Recommended)
@@ -200,3 +200,226 @@ Once Priority 2 is complete:
 5. **Adjust subsequent priorities** based on learnings
 
 This approach maximizes learning, minimizes risk, and delivers value incrementally while building toward the complete vision.
+
+---
+
+# Expansion Phase Priorities (Post-MVP)
+
+## Current Status: MVP Complete ✅
+**Achieved**: Priorities 1-4 complete with production-ready Python ecosystem support
+**Next**: Expansion into documentation sources and multi-language support
+
+## 🚀 **Expansion Priority 1: Universal Documentation Sources (Weeks 1-4)**
+**Goal**: Provide rich documentation beyond PyPI for ALL current and future language ecosystems
+
+**Strategic Value**:
+- Immediately benefits existing Python users
+- Creates foundation for all future language ecosystems
+- Universal value proposition (GitHub works for every language)
+
+### **Sub-Priority 1A: GitHub Integration (Weeks 1-2)**
+**Goal**: Add GitHub repository documentation to Python packages
+
+**Tasks**:
+1. **Repository URL Extraction**
+   - Parse PyPI `project_urls` for GitHub/GitLab links
+   - Handle URL variations and redirects
+   - Implement fallback discovery strategies
+
+2. **GitHub API Integration**
+   - Implement authenticated GitHub API client
+   - README file fetching with format detection (Markdown, RST)
+   - Examples directory scanning and content extraction
+   - Rate limiting and error handling (5000 requests/hour)
+
+3. **Content Processing & Integration**
+   - Markdown/RST to AI-optimized text conversion
+   - Code example extraction and highlighting
+   - Integration with existing PyPI documentation formatting
+   - Query-based content filtering
+
+**Success Criteria**:
+- 80%+ Python packages have discoverable GitHub repositories
+- README content successfully extracted and formatted
+- Measurable improvement in AI coding suggestion quality
+- Sub-5-second response times maintained
+
+**Risk Mitigation**:
+- GitHub rate limiting through intelligent caching and batching
+- Graceful degradation when repositories are unavailable
+- Content quality assessment to prioritize valuable documentation
+
+### **Sub-Priority 1B: Read the Docs Integration (Week 3)**
+**Goal**: Add structured API documentation for Python packages
+
+**Tasks**:
+1. **RTD Detection & Access**
+   - Detect Read the Docs URLs from PyPI metadata
+   - Handle custom documentation domains
+   - Site availability validation
+
+2. **Documentation Scraping**
+   - HTML parsing for API reference sections
+   - Tutorial and guide content extraction
+   - Structured content organization
+
+3. **Multi-Format Support**
+   - Sphinx documentation parsing
+   - MkDocs site structure handling
+   - Generic HTML documentation fallback
+
+**Success Criteria**:
+- 60%+ major Python packages have RTD documentation extracted
+- Structured API documentation improves AI responses
+- Integration with existing documentation sources
+
+### **Sub-Priority 1C: Multi-Source Aggregation (Week 4)**
+**Goal**: Intelligently combine documentation from multiple sources
+
+**Tasks**:
+1. **Source Intelligence**
+   - Content deduplication algorithms
+   - Source prioritization based on query and package type
+   - Token budget management across sources
+
+2. **Concurrent Processing**
+   - Parallel source fetching with failure isolation
+   - Performance optimization for multi-source requests
+   - Smart caching strategies
+
+**Success Criteria**:
+- Comprehensive documentation for 90%+ Python packages
+- Intelligent source selection within token limits
+- Maintained performance with multiple sources
+
+---
+
+## 🌐 **Expansion Priority 2: Multi-Language Foundation (Weeks 5-8)**
+**Goal**: Establish universal architecture and add highest-impact language ecosystem
+
+**Strategic Value**:
+- 10x+ market expansion (Python → Python + JavaScript)
+- Validates universal architecture design
+- Targets largest developer community (65% use JavaScript)
+
+### **Sub-Priority 2A: Universal Architecture (Week 5)**
+**Goal**: Create language-agnostic foundation
+
+**Tasks**:
+1. **Core Abstractions**
+   - `LanguageEcosystem` interface design
+   - `UniversalMCPServer` implementation
+   - Language detection system
+
+2. **Unified Caching Strategy**
+   - Cross-language cache management
+   - Language-prefixed cache keys
+   - Shared documentation source integration
+
+**Success Criteria**:
+- Clean separation between language-specific and universal code
+- Extensible architecture validated with Python ecosystem
+- Performance maintained with universal layer
+
+### **Sub-Priority 2B: Node.js Ecosystem (Weeks 6-8)**
+**Goal**: Complete second language ecosystem support
+
+**Tasks**:
+1. **Dependency Parsing**
+   - `package.json` parsing (dependencies, devDependencies, peerDependencies)
+   - Lock file integration (`package-lock.json`, `yarn.lock`)
+   - Scoped package handling (`@org/package`)
+   - Monorepo and workspace support
+
+2. **Documentation Sources**
+   - npm Registry API integration
+   - GitHub documentation (reuse from Priority 1A)
+   - TypeScript definition file parsing
+   - JSDoc extraction and formatting
+
+3. **Testing & Integration**
+   - Test with major Node.js packages (express, react, lodash)
+   - Monorepo project validation
+   - Performance benchmarking
+
+**Success Criteria**:
+- Complete Node.js dependency parsing and resolution
+- Rich documentation from npm + GitHub sources
+- Universal MCP tools work across Python and Node.js
+- 2x developer market coverage achieved
+
+---
+
+## 🎯 **Expansion Priority 3: Rapid Language Addition (Weeks 9-12)**
+**Goal**: Add simple ecosystems to validate scalability and increase coverage
+
+### **Sub-Priority 3A: Go Language Support (Weeks 9-10)**
+**Goal**: Validate architecture with simple, well-designed ecosystem
+
+**Tasks**:
+- `go.mod` and `go.sum` parsing
+- pkg.go.dev API integration
+- Major version handling (v2, v3+ import path changes)
+- GitHub integration (reuse existing)
+
+**Strategic Value**: Growing ecosystem (15% developers), simple dependency model
+
+### **Sub-Priority 3B: Performance & Polish (Weeks 11-12)**
+**Goal**: Optimize multi-language system for production use
+
+**Tasks**:
+- Multi-language performance optimization
+- Advanced caching strategies
+- Monitoring and observability
+- Documentation and user guides
+
+**Success Criteria**:
+- 3+ language ecosystems supported
+- Sub-5-second performance across all languages
+- Production-ready monitoring and error handling
+
+---
+
+## 🏢 **Expansion Priority 4: Enterprise Ecosystems (Weeks 13-20)**
+**Goal**: Support high-value enterprise development ecosystems
+
+### **Sub-Priority 4A: .NET Ecosystem (Weeks 13-16)**
+- `.csproj` and NuGet parsing
+- NuGet API and Microsoft Docs integration
+- Enterprise repository support
+
+### **Sub-Priority 4B: Java Ecosystem (Weeks 17-20)**
+- Maven and Gradle build system support
+- Maven Central API integration
+- Complex dependency resolution
+
+**Strategic Value**: Large enterprise markets, validates complex ecosystem handling
+
+---
+
+## Key Expansion Principles
+
+### 1. **Universal Foundation First**
+Every expansion builds capability for ALL current and future languages
+- GitHub integration benefits Python immediately, enables all future languages
+- Universal architecture supports infinite language additions
+
+### 2. **Market Impact Prioritization**
+Focus on maximum developer coverage:
+- Phase 1: Python (current) + JavaScript = ~80% of web developers
+- Phase 2: Add Go (growing, simple) = validate scaling
+- Phase 3: Add enterprise languages (.NET, Java) = enterprise market
+
+### 3. **Technical Risk Management**
+- Simple ecosystems (Go) validate architecture before complex ones (Java)
+- Reuse proven patterns (GitHub integration) across languages
+- Graceful degradation ensures system remains useful during expansion
+
+### 4. **Incremental Value Delivery**
+Each phase delivers immediate value:
+- Priority 1: Better Python documentation
+- Priority 2: Complete second language
+- Priority 3: Validates universal platform
+- Priority 4: Enterprise-ready solution
+
+This expansion strategy transforms AutoDocs from a Python tool to the universal documentation intelligence platform for AI-assisted development.
