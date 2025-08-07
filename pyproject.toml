@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "autodocs-mcp"
-version = "0.1.5"
+name = "autodoc-mcp"
+version = "0.1.6"
 description = "MCP server for automatic Python package documentation context"
 authors = [{name = "AutoDocs Team", email = "team@autodocs.dev"}]
 license = {text = "MIT"}
