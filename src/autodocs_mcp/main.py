@@ -1,6 +1,9 @@
 """FastMCP server entry point for AutoDocs MCP Server."""
 
 import asyncio
+
+# Configure structured logging to use stderr (required for MCP stdio protocol)
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,8 +17,6 @@ from .core.doc_fetcher import PyPIDocumentationFetcher
 from .core.version_resolver import VersionResolver
 from .exceptions import AutoDocsError
 
-# Configure structured logging to use stderr (required for MCP stdio protocol)
-import sys
 structlog.configure(
     processors=[
         structlog.processors.TimeStamper(fmt="ISO"),
@@ -138,7 +139,9 @@ async def get_package_docs(
         )
 
         # Step 1: Resolve to specific version
-        resolved_version = await version_resolver.resolve_version(package_name, version_constraint)
+        resolved_version = await version_resolver.resolve_version(
+            package_name, version_constraint
+        )
 
         # Step 2: Check version-specific cache
         cache_key = version_resolver.generate_cache_key(package_name, resolved_version)
@@ -232,7 +235,10 @@ async def refresh_cache() -> dict[str, Any]:
         # Get final stats
         final_stats = await cache_manager.get_cache_stats()
 
-        logger.info("Cache refresh completed", cleared_entries=initial_stats.get("total_entries", 0))
+        logger.info(
+            "Cache refresh completed",
+            cleared_entries=initial_stats.get("total_entries", 0),
+        )
 
         return {
             "success": True,

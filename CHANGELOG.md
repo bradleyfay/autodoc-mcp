@@ -5,6 +5,73 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-08-07
+
+### Fixed
+- **CI/CD Pipeline Issues**: Resolved ruff linting failures in GitHub Actions
+  - Fixed import sorting issues in `src/autodocs_mcp/main.py`
+  - Cleaned up unused imports and whitespace in test files
+  - Added explicit `--no-fix` flag to GitHub Actions ruff check for consistency
+  - All code quality checks now pass in both local pre-commit hooks and CI
+
+### Changed
+- **GitHub Actions Configuration**: Updated CI workflow to be more explicit about ruff behavior
+  - CI now runs `ruff check --no-fix` to ensure it only validates without attempting fixes
+  - Maintains separation between local development (with auto-fixing) and CI validation
+
+## [0.1.3] - 2025-08-07
+
+### Added
+- **Pre-commit hooks configuration** with comprehensive code quality checks
+  - Ruff linting and formatting for Python code quality
+  - MyPy static type checking with proper dependencies
+  - Basic file hygiene checks (trailing whitespace, end-of-file-fixer, YAML validation)
+  - Excluded `.specstory/` directory from whitespace checks to avoid auto-generated file conflicts
+
+- **Development workflow standards** in CLAUDE.md
+  - GitHub Flow branching strategy with feature branches and squash merging
+  - Conventional Commits specification requirement for all commit messages
+  - Semantic Versioning (SemVer) 2.0.0 compliance with automatic version bumping rules
+  - Comprehensive changelog management requirements using Keep a Changelog format
+
+### Fixed
+- **Code quality improvements** across the entire codebase:
+  - Exception chaining: Added `from e` to all `raise` statements for proper error context
+  - Context manager usage: Replaced `try/except/pass` patterns with `contextlib.suppress(OSError)`
+  - Type annotations: Added missing `typing.Any` imports and fixed type hints
+  - Async context managers: Fixed return type annotations for `__aenter__` methods
+  - Unused variables: Removed unused imports and variables to satisfy linting
+  - File formatting: Fixed trailing whitespace and missing end-of-file newlines
+
+### Changed
+- **Pre-commit integration**: All commits now automatically run code quality checks locally
+- **CI/CD reliability**: Local pre-commit hooks prevent CI failures by catching issues before push
+- **Type safety**: Stricter type checking with MyPy ensures better code reliability
+
+## [0.1.2] - 2025-08-07
+
+### Added
+- GitHub Actions CI/CD pipeline with automated PyPI deployment
+- Trusted publishing configuration using OpenID Connect (OIDC)
+- Tag-based release workflow with automatic PyPI package publishing
+- Integration tests for MCP server functionality
+- Additional test coverage for error handling scenarios
+
+### Fixed
+- CI pipeline configuration and dependency management
+- Test reliability improvements with proper async handling
+- PyPI deployment authentication using trusted publishing tokens
+
+## [0.1.1] - 2025-08-07
+
+### Added
+- Initial CI/CD pipeline setup
+- Basic GitHub Actions workflow for testing and validation
+
+### Fixed
+- Project packaging and build configuration issues
+- Missing README.md file for package distribution
+
 ## [0.1.0] - 2025-08-07
 
 ### Added

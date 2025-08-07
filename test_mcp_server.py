@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test script to start the MCP server manually for testing."""
 
-import asyncio
 from autodocs_mcp.main import main
 
 if __name__ == "__main__":
@@ -9,7 +8,7 @@ if __name__ == "__main__":
     print("Press Ctrl+C to stop")
     print("This server can be connected to from Cursor or other MCP clients")
     print()
-    
+
     try:
         main()
     except KeyboardInterrupt:
