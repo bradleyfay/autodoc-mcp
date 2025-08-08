@@ -1,12 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(timeout 5 uv run:*)",
+      "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)"
     ],
     "deny": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "autodocs-mcp"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

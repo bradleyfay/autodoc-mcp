@@ -34,6 +34,12 @@ class CacheManagerInterface(ABC):
     async def initialize(self) -> None:
         """Initialize cache storage."""
 
+    @abstractmethod
+    async def resolve_and_cache(
+        self, package_name: str, version_constraint: str | None = None
+    ) -> tuple[dict[str, Any], bool]:
+        """Resolve package version and retrieve from cache or fetch fresh."""
+
 
 class FileCacheManager(CacheManagerInterface):
     """JSON file-based cache implementation."""
@@ -151,3 +157,66 @@ class FileCacheManager(CacheManagerInterface):
         except OSError as e:
             logger.error("Failed to get cache stats", error=str(e))
             return {"error": str(e)}
+
+    async def resolve_and_cache(
+        self, package_name: str, version_constraint: str | None = None
+    ) -> tuple[dict[str, Any], bool]:
+        """
+        Resolve package version and retrieve from cache or fetch fresh.
+
+        Args:
+            package_name: Name of the package
+            version_constraint: Optional version constraint
+
+        Returns:
+            Tuple of (package_info_dict, from_cache_bool)
+        """
+        from .doc_fetcher import PyPIDocumentationFetcher
+        from .version_resolver import VersionResolver
+
+        # Initialize resolvers
+        version_resolver = VersionResolver()
+
+        try:
+            # Step 1: Resolve to specific version
+            resolved_version = await version_resolver.resolve_version(
+                package_name, version_constraint
+            )
+
+            # Step 2: Check version-specific cache
+            cache_key = version_resolver.generate_cache_key(
+                package_name, resolved_version
+            )
+            cached_entry = await self.get(cache_key)
+
+            if cached_entry:
+                logger.debug(
+                    "Cache hit for resolve_and_cache",
+                    package=package_name,
+                    version=resolved_version,
+                )
+                # Return as dictionary for compatibility
+                return cached_entry.data.model_dump(), True
+            else:
+                logger.debug(
+                    "Cache miss, fetching fresh",
+                    package=package_name,
+                    version=resolved_version,
+                )
+
+                # Step 3: Fetch fresh from PyPI
+                async with PyPIDocumentationFetcher() as fetcher:
+                    package_info = await fetcher.fetch_package_info(package_name)
+                    await self.set(cache_key, package_info)
+
+                # Return as dictionary for compatibility
+                return package_info.model_dump(), False
+
+        except Exception as e:
+            logger.error(
+                "Failed to resolve and cache package",
+                package=package_name,
+                constraint=version_constraint,
+                error=str(e),
+            )
+            raise
