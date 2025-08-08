@@ -5,6 +5,25 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-08-07
+
+### Added
+- **Phase 4: Dependency Context System** - Major new feature providing rich AI context
+  - **Dependency Intelligence Engine**: Smart dependency resolution with relevance scoring
+  - **Context Documentation Formatter**: AI-optimized documentation extraction and token management
+  - **Concurrent Context Fetcher**: High-performance parallel documentation fetching
+  - **New MCP Tool**: `get_package_docs_with_context` for comprehensive documentation context
+  - **Enhanced Cache Manager**: Added `resolve_and_cache` method for seamless integration
+  - Configurable context scope (primary_only, runtime, smart)
+  - Token budget management and performance tracking
+  - Support for major frameworks (FastAPI, Django, Flask, etc.)
+  - Graceful degradation on dependency fetch failures
+
+### Changed
+- **Legacy Tool Enhancement**: Updated `get_package_docs` with note about new context tool
+- **Service Initialization**: Enhanced to include Phase 4 context fetcher
+- **Documentation**: All new modules include comprehensive docstrings and type hints
+
 ## [0.1.4] - 2025-08-07
 
 ### Fixed
