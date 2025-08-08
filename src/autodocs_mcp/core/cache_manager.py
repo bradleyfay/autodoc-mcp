@@ -11,6 +11,7 @@ from structlog import get_logger
 
 from ..exceptions import CacheError
 from ..models import CacheEntry, PackageInfo
+from ..security import sanitize_cache_key
 from .error_formatter import ErrorFormatter, ErrorSeverity, FormattedError
 
 logger = get_logger(__name__)
@@ -56,7 +57,8 @@ class FileCacheManager(CacheManagerInterface):
 
     async def get(self, cache_key: str) -> CacheEntry | None:
         """Retrieve cached entry by version-based key."""
-        cache_file = self.cache_dir / f"{cache_key}.json"
+        sanitized_key = sanitize_cache_key(cache_key)
+        cache_file = self.cache_dir / f"{sanitized_key}.json"
 
         if not cache_file.exists():
             logger.debug("Cache miss", cache_key=cache_key)
@@ -85,7 +87,8 @@ class FileCacheManager(CacheManagerInterface):
 
     async def set(self, cache_key: str, package_info: PackageInfo) -> None:
         """Store package info in cache with version-based key."""
-        cache_file = self.cache_dir / f"{cache_key}.json"
+        sanitized_key = sanitize_cache_key(cache_key)
+        cache_file = self.cache_dir / f"{sanitized_key}.json"
 
         cache_entry = CacheEntry(
             data=package_info,
@@ -115,7 +118,8 @@ class FileCacheManager(CacheManagerInterface):
     async def invalidate(self, cache_key: str | None = None) -> None:
         """Invalidate specific cache entry or entire cache."""
         if cache_key:
-            cache_file = self.cache_dir / f"{cache_key}.json"
+            sanitized_key = sanitize_cache_key(cache_key)
+            cache_file = self.cache_dir / f"{sanitized_key}.json"
             try:
                 if cache_file.exists():
                     cache_file.unlink()
@@ -166,7 +170,8 @@ class FileCacheManager(CacheManagerInterface):
         errors: list[FormattedError] = []
 
         try:
-            cache_file = self.cache_dir / f"{cache_key}.json"
+            sanitized_key = sanitize_cache_key(cache_key)
+            cache_file = self.cache_dir / f"{sanitized_key}.json"
 
             if not cache_file.exists():
                 return None, errors

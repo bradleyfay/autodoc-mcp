@@ -17,6 +17,50 @@ logger = get_logger(__name__)
 T = TypeVar("T")
 
 
+class ConnectionPoolManager:
+    """Singleton connection pool manager for HTTP clients."""
+
+    _instance = None
+    _lock = asyncio.Lock()
+
+    def __new__(cls) -> "ConnectionPoolManager":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        if not hasattr(self, "initialized"):
+            self._clients: dict[str, httpx.AsyncClient] = {}
+            self._lock = asyncio.Lock()
+            self.initialized = True
+
+    async def get_client(self, config_key: str = "default") -> httpx.AsyncClient:
+        """Get or create HTTP client with connection pooling."""
+        async with self._lock:
+            if config_key not in self._clients:
+                config = get_config()
+                self._clients[config_key] = httpx.AsyncClient(
+                    timeout=httpx.Timeout(config.request_timeout),
+                    follow_redirects=True,
+                    headers={"User-Agent": "AutoDocs-MCP/1.0"},
+                    limits=httpx.Limits(
+                        max_connections=100,
+                        max_keepalive_connections=20,
+                        keepalive_expiry=30.0,
+                    ),
+                )
+                logger.debug("Created new HTTP client", config_key=config_key)
+            return self._clients[config_key]
+
+    async def close_all(self) -> None:
+        """Close all HTTP clients."""
+        async with self._lock:
+            for config_key, client in self._clients.items():
+                await client.aclose()
+                logger.debug("Closed HTTP client", config_key=config_key)
+            self._clients.clear()
+
+
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
@@ -63,22 +107,37 @@ class CircuitBreaker:
 
 
 class RateLimiter:
-    """Simple rate limiter with sliding window."""
+    """Simple rate limiter with sliding window and memory bounds."""
 
     def __init__(self, requests_per_minute: int = 60):
         self.requests_per_minute = requests_per_minute
         self.requests: deque[float] = deque()
+        self._max_entries = max(requests_per_minute * 2, 1000)  # Safety limit
+        self._last_cleanup = time.time()
 
     async def acquire(self) -> None:
         """Wait if necessary to respect rate limits."""
         now = time.time()
 
+        # Force cleanup every 60 seconds to prevent memory leaks
+        if now - self._last_cleanup > 60:
+            await self._force_cleanup(now)
+            self._last_cleanup = now
+
         # Remove requests older than 1 minute
-        while self.requests and now - self.requests[0] > 60:
-            self.requests.popleft()
+        await self._cleanup_old_requests(now)
+
+        # Emergency cleanup if deque grows too large
+        if len(self.requests) > self._max_entries:
+            logger.warning(
+                "Rate limiter deque exceeded max size, forcing cleanup",
+                current_size=len(self.requests),
+                max_size=self._max_entries,
+            )
+            await self._force_cleanup(now)
 
         # If we're at the limit, wait until we can make another request
-        if len(self.requests) >= self.requests_per_minute:
+        if len(self.requests) >= self.requests_per_minute and self.requests:
             sleep_time = 60 - (now - self.requests[0]) + 0.1  # Small buffer
             if sleep_time > 0:
                 logger.debug("Rate limiting: sleeping", sleep_time=sleep_time)
@@ -86,6 +145,22 @@ class RateLimiter:
 
         # Record this request
         self.requests.append(now)
+
+    async def _cleanup_old_requests(self, now: float) -> None:
+        """Remove requests older than 1 minute."""
+        cutoff = now - 60
+        while self.requests and self.requests[0] < cutoff:
+            self.requests.popleft()
+
+    async def _force_cleanup(self, now: float) -> None:
+        """Force cleanup of old entries to prevent memory leaks."""
+        cutoff = now - 60
+        # Keep only recent requests
+        self.requests = deque(t for t in self.requests if t >= cutoff)
+
+        # If still too large, keep only the most recent entries
+        if len(self.requests) > self.requests_per_minute:
+            self.requests = deque(sorted(self.requests)[-self.requests_per_minute :])
 
 
 class NetworkResilientClient:
@@ -99,6 +174,7 @@ class NetworkResilientClient:
             max_delay=config.max_retry_delay,
         )
         self._client: httpx.AsyncClient | None = None
+        self._pool_manager = ConnectionPoolManager()
         self._circuit_breaker = CircuitBreaker(
             failure_threshold=config.circuit_breaker_threshold,
             reset_timeout=config.circuit_breaker_timeout,
@@ -107,17 +183,14 @@ class NetworkResilientClient:
 
     async def __aenter__(self) -> "NetworkResilientClient":
         """Enter async context manager."""
-        self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0),
-            follow_redirects=True,
-            headers={"User-Agent": "AutoDocs-MCP/1.0"},
-        )
+        # Get shared client from pool instead of creating new one
+        self._client = await self._pool_manager.get_client("default")
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Exit async context manager."""
-        if self._client:
-            await self._client.aclose()
+        # Don't close the client - it's managed by the pool
+        self._client = None
 
     async def get_with_retry(self, url: str, **kwargs: Any) -> httpx.Response:
         """Make GET request with retry logic and circuit breaker."""

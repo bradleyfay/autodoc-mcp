@@ -1,9 +1,11 @@
 """FastMCP server entry point for AutoDocs MCP Server."""
 
 import asyncio
+import signal
 
 # Configure structured logging to use stderr (required for MCP stdio protocol)
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,7 @@ from .core.doc_fetcher import PyPIDocumentationFetcher
 from .core.error_formatter import ErrorFormatter, ResponseFormatter
 from .core.version_resolver import VersionResolver
 from .exceptions import AutoDocsError, ProjectParsingError
+from .security import InputValidator
 
 structlog.configure(
     processors=[
@@ -40,6 +43,73 @@ parser: PyProjectParser | None = None
 cache_manager: FileCacheManager | None = None
 version_resolver: VersionResolver | None = None
 context_fetcher: ConcurrentContextFetcher | None = None
+
+
+class GracefulShutdown:
+    """Handle graceful shutdown of the MCP server."""
+
+    def __init__(self) -> None:
+        self.shutdown_event = asyncio.Event()
+        self.active_requests = 0
+        self.max_shutdown_wait = 30.0  # seconds
+
+    def register_signals(self) -> None:
+        """Register signal handlers for graceful shutdown."""
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
+
+    def _signal_handler(self, signum: int, frame: Any) -> None:
+        """Handle shutdown signals."""
+        logger.info(f"Received signal {signum}, initiating graceful shutdown")
+        self.shutdown_event.set()
+
+    @asynccontextmanager
+    async def request_context(self) -> Any:
+        """Context manager to track active requests."""
+        self.active_requests += 1
+        try:
+            yield
+        finally:
+            self.active_requests -= 1
+
+    async def wait_for_shutdown(self) -> None:
+        """Wait for shutdown signal and cleanup."""
+        await self.shutdown_event.wait()
+
+        logger.info("Shutting down gracefully...")
+
+        # Wait for active requests to complete
+        start_time = asyncio.get_event_loop().time()
+        while self.active_requests > 0:
+            elapsed = asyncio.get_event_loop().time() - start_time
+            if elapsed > self.max_shutdown_wait:
+                logger.warning(
+                    f"Forcing shutdown after {elapsed}s with {self.active_requests} active requests"
+                )
+                break
+
+            logger.info(
+                f"Waiting for {self.active_requests} active requests to complete"
+            )
+            await asyncio.sleep(0.5)
+
+        # Cleanup resources
+        await self._cleanup_resources()
+
+    async def _cleanup_resources(self) -> None:
+        """Cleanup application resources."""
+        from .core.network_resilience import ConnectionPoolManager
+
+        # Close HTTP client connections
+        pool_manager = ConnectionPoolManager()
+        await pool_manager.close_all()
+
+        # Flush any pending cache writes
+        if cache_manager:
+            # Add any pending cache operations cleanup if needed
+            pass
+
+        logger.info("Graceful shutdown completed")
 
 
 @mcp.tool
@@ -66,7 +136,11 @@ async def scan_dependencies(project_path: str | None = None) -> dict[str, Any]:
         }
 
     try:
-        path = Path(project_path) if project_path else Path.cwd()
+        # Validate project path if provided
+        if project_path is not None:
+            path = InputValidator.validate_project_path(project_path)
+        else:
+            path = Path.cwd()
         logger.info("Scanning dependencies", project_path=str(path))
 
         result = await parser.parse_project(path)
@@ -131,26 +205,37 @@ async def get_package_docs(
         }
 
     try:
+        # Validate inputs
+        validated_package_name = InputValidator.validate_package_name(package_name)
+        if version_constraint is not None:
+            validated_constraint = InputValidator.validate_version_constraint(
+                version_constraint
+            )
+        else:
+            validated_constraint = None
+
         logger.info(
             "Fetching package docs",
-            package=package_name,
-            constraint=version_constraint,
+            package=validated_package_name,
+            constraint=validated_constraint,
             query=query,
         )
 
         # Step 1: Resolve to specific version
         resolved_version = await version_resolver.resolve_version(
-            package_name, version_constraint
+            validated_package_name, validated_constraint
         )
 
         # Step 2: Check version-specific cache
-        cache_key = version_resolver.generate_cache_key(package_name, resolved_version)
+        cache_key = version_resolver.generate_cache_key(
+            validated_package_name, resolved_version
+        )
         cached_entry = await cache_manager.get(cache_key)
 
         if cached_entry:
             logger.info(
                 "Version-specific cache hit",
-                package=package_name,
+                package=validated_package_name,
                 version=resolved_version,
                 constraint=version_constraint,
             )
@@ -159,12 +244,12 @@ async def get_package_docs(
         else:
             logger.info(
                 "Fetching fresh package info",
-                package=package_name,
+                package=validated_package_name,
                 version=resolved_version,
             )
 
             async with PyPIDocumentationFetcher() as fetcher:
-                package_info = await fetcher.fetch_package_info(package_name)
+                package_info = await fetcher.fetch_package_info(validated_package_name)
                 await cache_manager.set(cache_key, package_info)
             from_cache = False
 
@@ -185,10 +270,12 @@ async def get_package_docs(
         }
 
     except AutoDocsError as e:
-        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
+        formatted_error = ErrorFormatter.format_exception(
+            e, {"package": validated_package_name}
+        )
         logger.error(
             "Documentation fetch failed",
-            package=package_name,
+            package=validated_package_name,
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -203,7 +290,9 @@ async def get_package_docs(
             },
         }
     except Exception as e:
-        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
+        formatted_error = ErrorFormatter.format_exception(
+            e, {"package": validated_package_name}
+        )
         logger.error("Unexpected error during documentation fetch", error=str(e))
         return {
             "success": False,
@@ -253,18 +342,27 @@ async def get_package_docs_with_context(
         }
 
     try:
+        # Validate inputs
+        validated_package_name = InputValidator.validate_package_name(package_name)
+        if version_constraint is not None:
+            validated_constraint = InputValidator.validate_version_constraint(
+                version_constraint
+            )
+        else:
+            validated_constraint = None
+
         logger.info(
             "Fetching package context",
-            package=package_name,
-            constraint=version_constraint,
+            package=validated_package_name,
+            constraint=validated_constraint,
             include_deps=include_dependencies,
             scope=context_scope,
         )
 
         # Fetch comprehensive context
         context, performance_metrics = await context_fetcher.fetch_package_context(
-            package_name=package_name,
-            version_constraint=version_constraint,
+            package_name=validated_package_name,
+            version_constraint=validated_constraint,
             include_dependencies=include_dependencies,
             context_scope=context_scope,
             max_dependencies=max_dependencies,
@@ -293,7 +391,7 @@ async def get_package_docs_with_context(
     except AutoDocsError as e:
         logger.error(
             "Context fetch failed",
-            package=package_name,
+            package=validated_package_name,
             error=str(e),
             error_type=type(e).__name__,
         )
@@ -302,7 +400,9 @@ async def get_package_docs_with_context(
             "error": {"type": type(e).__name__, "message": str(e)},
         }
     except Exception as e:
-        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
+        formatted_error = ErrorFormatter.format_exception(
+            e, {"package": validated_package_name}
+        )
         logger.error("Unexpected error during context fetch", error=str(e))
         return {
             "success": False,
@@ -442,21 +542,51 @@ async def initialize_services() -> None:
     logger.info("Services initialized successfully", phase_4_enabled=True)
 
 
+async def async_main() -> None:
+    """Async main function with graceful shutdown."""
+    shutdown_handler = GracefulShutdown()
+    shutdown_handler.register_signals()
+
+    try:
+        await initialize_services()
+        logger.info("Starting AutoDocs MCP Server")
+
+        # Start server and wait for shutdown
+        server_task = asyncio.create_task(run_mcp_server())
+        shutdown_task = asyncio.create_task(shutdown_handler.wait_for_shutdown())
+
+        await asyncio.wait(
+            [server_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED
+        )
+
+    except Exception as e:
+        logger.error("Server startup failed", error=str(e))
+        raise
+    finally:
+        await shutdown_handler._cleanup_resources()
+
+
+async def run_mcp_server() -> None:
+    """Run the MCP server in async mode."""
+    # Since FastMCP doesn't have native async support, we need to run it in a thread
+    import threading
+
+    server_thread = threading.Thread(target=mcp.run, daemon=True)
+    server_thread.start()
+
+    # Keep the async task alive while server is running
+    while server_thread.is_alive():
+        await asyncio.sleep(1.0)
+
+
 def main() -> None:
     """Entry point for the MCP server."""
     try:
-        # Initialize services
-        asyncio.run(initialize_services())
-
-        logger.info("Starting AutoDocs MCP Server")
-
-        # Run the server
-        mcp.run()
-
+        asyncio.run(async_main())
     except KeyboardInterrupt:
         logger.info("Server shutdown requested")
     except Exception as e:
-        logger.error("Server startup failed", error=str(e))
+        logger.error("Server failed", error=str(e))
         raise
 
 
