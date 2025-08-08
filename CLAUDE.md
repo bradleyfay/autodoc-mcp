@@ -259,6 +259,20 @@ When working in this repository, you MUST:
 3. **Create feature branch for large changes**: For significant features, create `feature/description` from `develop`
 4. **Never commit directly to main** - `main` is only for completed releases
 
+### Branch Management for Development
+
+**MANDATORY**: Before making any code changes, you MUST:
+
+1. **Check current branch**: Always run `git branch` or `git status` first
+2. **Create feature branch if on main**: If currently on `main` branch, immediately create and switch to a feature branch before any code modifications:
+   ```bash
+   git checkout -b feature/description-of-changes
+   ```
+3. **Use descriptive branch names**: `feature/add-search`, `fix/cache-corruption`, `docs/update-readme`
+4. **Never commit directly to main** - All development work must happen on feature branches
+
+This ensures we follow the mandatory PR workflow from the start of development.
+
 ### Commit Message Examples
 
 ```bash
