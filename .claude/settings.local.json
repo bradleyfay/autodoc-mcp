@@ -2,8 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
+      "Bash(gh api:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(gh run view:*)",
+      "Bash(uv run:*)",
+      "Bash(git checkout:*)",
       "Bash(timeout 5 uv run:*)",
-      "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)"
+      "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   },
