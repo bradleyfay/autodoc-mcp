@@ -198,7 +198,7 @@ class ContextDocumentationFormatter:
 
         # Look for bullet points or numbered lists
         bullet_patterns = [
-            r"[•*-]\s*([^•*-\n]+)",  # Bullet points
+            r"[•*\-]\s*([^•*\-\n]+)",  # Bullet points (escape the hyphen)
             r"\d+\.\s*([^\n]+)",  # Numbered lists
         ]
 
