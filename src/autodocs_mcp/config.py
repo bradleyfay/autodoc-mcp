@@ -5,7 +5,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+
+from .security import validate_pypi_url
 
 
 class AutoDocsConfig(BaseModel):
@@ -34,6 +36,11 @@ class AutoDocsConfig(BaseModel):
     rate_limit_requests_per_minute: int = Field(default=60)
     max_documentation_size: int = Field(default=50000)  # Characters
 
+    @validator("pypi_base_url")
+    def validate_pypi_url_field(cls, v: str) -> str:
+        """Validate PyPI URL using security module."""
+        return validate_pypi_url(v)
+
     @classmethod
     def from_env(cls) -> "AutoDocsConfig":
         """Load configuration from environment variables."""
@@ -53,6 +60,20 @@ class AutoDocsConfig(BaseModel):
             cache_cleanup_days=int(os.getenv("AUTODOCS_CLEANUP_DAYS", "90")),
             max_dependency_context=int(os.getenv("AUTODOCS_MAX_DEPS", "8")),
             max_context_tokens=int(os.getenv("AUTODOCS_MAX_TOKENS", "30000")),
+            # ADD MISSING PARAMETERS:
+            max_retry_attempts=int(os.getenv("AUTODOCS_MAX_RETRY_ATTEMPTS", "3")),
+            base_retry_delay=float(os.getenv("AUTODOCS_BASE_RETRY_DELAY", "1.0")),
+            max_retry_delay=float(os.getenv("AUTODOCS_MAX_RETRY_DELAY", "30.0")),
+            circuit_breaker_threshold=int(
+                os.getenv("AUTODOCS_CIRCUIT_BREAKER_THRESHOLD", "5")
+            ),
+            circuit_breaker_timeout=float(
+                os.getenv("AUTODOCS_CIRCUIT_BREAKER_TIMEOUT", "60.0")
+            ),
+            rate_limit_requests_per_minute=int(
+                os.getenv("AUTODOCS_RATE_LIMIT_RPM", "60")
+            ),
+            max_documentation_size=int(os.getenv("AUTODOCS_MAX_DOC_SIZE", "50000")),
         )
 
     def model_post_init(self, __context: Any) -> None:
