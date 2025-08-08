@@ -25,6 +25,15 @@ class AutoDocsConfig(BaseModel):
     max_dependency_context: int = Field(default=8)
     max_context_tokens: int = Field(default=30000)
 
+    # Performance and rate limiting settings
+    max_retry_attempts: int = Field(default=3)
+    base_retry_delay: float = Field(default=1.0)
+    max_retry_delay: float = Field(default=30.0)
+    circuit_breaker_threshold: int = Field(default=5)
+    circuit_breaker_timeout: float = Field(default=60.0)
+    rate_limit_requests_per_minute: int = Field(default=60)
+    max_documentation_size: int = Field(default=50000)  # Characters
+
     @classmethod
     def from_env(cls) -> "AutoDocsConfig":
         """Load configuration from environment variables."""

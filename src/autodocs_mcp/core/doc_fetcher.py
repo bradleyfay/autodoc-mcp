@@ -192,6 +192,7 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         self, package_info: PackageInfo, query: str | None = None
     ) -> str:
         """Format package info for AI consumption with optional query filtering."""
+        config = get_config()
         sections = []
 
         # Basic info
@@ -203,11 +204,14 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         if package_info.author:
             sections.append(f"**Author**: {package_info.author}")
 
-        # Description (truncated if too long)
+        # Description with intelligent truncation
         if package_info.description:
             desc = package_info.description
-            if len(desc) > 2000:  # Truncate very long descriptions
-                desc = desc[:2000] + "..."
+            max_desc_size = min(
+                config.max_documentation_size // 2, 10000
+            )  # Reserve space for other content
+            if len(desc) > max_desc_size:
+                desc = desc[:max_desc_size] + "\n\n... (truncated for performance)"
             sections.append(f"## Description\n{desc}")
 
         # Project URLs
@@ -230,6 +234,15 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         # Apply query filtering if provided
         if query:
             formatted = self._apply_query_filter(formatted, query)
+
+        # Final size check and truncation
+        if len(formatted) > config.max_documentation_size:
+            truncated = formatted[: config.max_documentation_size]
+            # Try to truncate at a section boundary
+            last_section = truncated.rfind("\n\n##")
+            if last_section > config.max_documentation_size // 2:
+                truncated = truncated[:last_section]
+            formatted = truncated + "\n\n... (truncated for performance)"
 
         return formatted
 

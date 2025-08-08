@@ -3,12 +3,14 @@
 import asyncio
 import random
 import time
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import httpx
 from structlog import get_logger
 
+from ..config import get_config
 from ..exceptions import NetworkError, PackageNotFoundError
 
 logger = get_logger(__name__)
@@ -60,13 +62,48 @@ class CircuitBreaker:
             logger.warning("Circuit breaker opened", failure_count=self._failure_count)
 
 
+class RateLimiter:
+    """Simple rate limiter with sliding window."""
+
+    def __init__(self, requests_per_minute: int = 60):
+        self.requests_per_minute = requests_per_minute
+        self.requests: deque[float] = deque()
+
+    async def acquire(self) -> None:
+        """Wait if necessary to respect rate limits."""
+        now = time.time()
+
+        # Remove requests older than 1 minute
+        while self.requests and now - self.requests[0] > 60:
+            self.requests.popleft()
+
+        # If we're at the limit, wait until we can make another request
+        if len(self.requests) >= self.requests_per_minute:
+            sleep_time = 60 - (now - self.requests[0]) + 0.1  # Small buffer
+            if sleep_time > 0:
+                logger.debug("Rate limiting: sleeping", sleep_time=sleep_time)
+                await asyncio.sleep(sleep_time)
+
+        # Record this request
+        self.requests.append(now)
+
+
 class NetworkResilientClient:
-    """HTTP client with built-in retry logic and circuit breaker."""
+    """HTTP client with built-in retry logic, circuit breaker, and rate limiting."""
 
     def __init__(self, retry_config: RetryConfig | None = None):
-        self.retry_config = retry_config or RetryConfig()
+        config = get_config()
+        self.retry_config = retry_config or RetryConfig(
+            max_attempts=config.max_retry_attempts,
+            base_delay=config.base_retry_delay,
+            max_delay=config.max_retry_delay,
+        )
         self._client: httpx.AsyncClient | None = None
-        self._circuit_breaker = CircuitBreaker()
+        self._circuit_breaker = CircuitBreaker(
+            failure_threshold=config.circuit_breaker_threshold,
+            reset_timeout=config.circuit_breaker_timeout,
+        )
+        self._rate_limiter = RateLimiter(config.rate_limit_requests_per_minute)
 
     async def __aenter__(self) -> "NetworkResilientClient":
         """Enter async context manager."""
@@ -90,6 +127,9 @@ class NetworkResilientClient:
                 # Check circuit breaker
                 if self._circuit_breaker.is_open():
                     raise NetworkError("Circuit breaker is open - too many failures")
+
+                # Apply rate limiting
+                await self._rate_limiter.acquire()
 
                 logger.debug("Making HTTP request", url=url, attempt=attempt)
                 if self._client is None:

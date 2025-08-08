@@ -302,12 +302,16 @@ async def get_package_docs_with_context(
             "error": {"type": type(e).__name__, "message": str(e)},
         }
     except Exception as e:
+        formatted_error = ErrorFormatter.format_exception(e, {"package": package_name})
         logger.error("Unexpected error during context fetch", error=str(e))
         return {
             "success": False,
             "error": {
-                "type": "UnexpectedError",
-                "message": f"An unexpected error occurred: {str(e)}",
+                "message": formatted_error.message,
+                "suggestion": formatted_error.suggestion,
+                "severity": formatted_error.severity.value,
+                "code": formatted_error.error_code,
+                "recoverable": formatted_error.recoverable,
             },
         }
 
