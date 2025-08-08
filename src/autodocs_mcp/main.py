@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 
 from .config import get_config
 from .core.cache_manager import FileCacheManager
+from .core.context_fetcher import ConcurrentContextFetcher, create_context_fetcher
 from .core.dependency_parser import PyProjectParser
 from .core.doc_fetcher import PyPIDocumentationFetcher
 from .core.version_resolver import VersionResolver
@@ -37,6 +38,7 @@ mcp = FastMCP("AutoDocs MCP Server 🚀")
 parser: PyProjectParser | None = None
 cache_manager: FileCacheManager | None = None
 version_resolver: VersionResolver | None = None
+context_fetcher: ConcurrentContextFetcher | None = None
 
 
 @mcp.tool
@@ -112,6 +114,9 @@ async def get_package_docs(
 ) -> dict[str, Any]:
     """
     Retrieve formatted documentation for a package with version-based caching.
+
+    This is the legacy single-package documentation tool. For rich context with
+    dependencies, use get_package_docs_with_context instead.
 
     Args:
         package_name: Name of the package to fetch documentation for
@@ -197,6 +202,101 @@ async def get_package_docs(
         }
     except Exception as e:
         logger.error("Unexpected error during documentation fetch", error=str(e))
+        return {
+            "success": False,
+            "error": {
+                "type": "UnexpectedError",
+                "message": f"An unexpected error occurred: {str(e)}",
+            },
+        }
+
+
+@mcp.tool
+async def get_package_docs_with_context(
+    package_name: str,
+    version_constraint: str | None = None,
+    include_dependencies: bool = True,
+    context_scope: str = "smart",
+    max_dependencies: int | None = None,
+    max_tokens: int | None = None,
+) -> dict[str, Any]:
+    """
+    Retrieve comprehensive documentation context including dependencies.
+
+    This is the main Phase 4 feature providing rich AI context with both the
+    requested package and its most relevant dependencies.
+
+    Args:
+        package_name: Primary package name to document
+        version_constraint: Version constraint for primary package
+        include_dependencies: Whether to include dependency context (default: True)
+        context_scope: Context scope - "primary_only", "runtime", or "smart" (default: "smart")
+        max_dependencies: Maximum dependencies to include (default: from config)
+        max_tokens: Maximum token budget for context (default: from config)
+
+    Returns:
+        Rich documentation context with primary package and dependencies
+    """
+    if context_fetcher is None:
+        return {
+            "success": False,
+            "error": {
+                "type": "InitializationError",
+                "message": "Context fetcher not initialized",
+            },
+        }
+
+    try:
+        logger.info(
+            "Fetching package context",
+            package=package_name,
+            constraint=version_constraint,
+            include_deps=include_dependencies,
+            scope=context_scope,
+        )
+
+        # Fetch comprehensive context
+        context, performance_metrics = await context_fetcher.fetch_package_context(
+            package_name=package_name,
+            version_constraint=version_constraint,
+            include_dependencies=include_dependencies,
+            context_scope=context_scope,
+            max_dependencies=max_dependencies,
+            max_tokens=max_tokens,
+        )
+
+        # Convert to serializable format
+        context_data = {
+            "primary_package": context.primary_package.model_dump(),
+            "runtime_dependencies": [
+                dep.model_dump() for dep in context.runtime_dependencies
+            ],
+            "dev_dependencies": [dep.model_dump() for dep in context.dev_dependencies],
+            "context_scope": context.context_scope,
+            "total_packages": context.total_packages,
+            "truncated_packages": context.truncated_packages,
+            "token_estimate": context.token_estimate,
+        }
+
+        return {
+            "success": True,
+            "context": context_data,
+            "performance": performance_metrics,
+        }
+
+    except AutoDocsError as e:
+        logger.error(
+            "Context fetch failed",
+            package=package_name,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return {
+            "success": False,
+            "error": {"type": type(e).__name__, "message": str(e)},
+        }
+    except Exception as e:
+        logger.error("Unexpected error during context fetch", error=str(e))
         return {
             "success": False,
             "error": {
@@ -296,7 +396,7 @@ async def get_cache_stats() -> dict[str, Any]:
 
 async def initialize_services() -> None:
     """Initialize global services with new components."""
-    global parser, cache_manager, version_resolver
+    global parser, cache_manager, version_resolver, context_fetcher
 
     config = get_config()
     logger.info("Initializing services", cache_dir=str(config.cache_dir))
@@ -307,7 +407,10 @@ async def initialize_services() -> None:
 
     await cache_manager.initialize()
 
-    logger.info("Services initialized successfully")
+    # Initialize Phase 4 context fetcher
+    context_fetcher = await create_context_fetcher(cache_manager)
+
+    logger.info("Services initialized successfully", phase_4_enabled=True)
 
 
 def main() -> None:
