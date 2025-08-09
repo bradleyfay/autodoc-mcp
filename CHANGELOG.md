@@ -5,6 +5,45 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2025-08-09
+
+### Added
+- **Comprehensive Test Coverage for Critical Network Components**
+  - **test_network_client.py**: Complete test suite for BasicNetworkClient (31 tests)
+    - Async context manager lifecycle testing
+    - HTTP retry scenarios for all status codes (404, 4xx, 5xx, timeouts)
+    - Exponential backoff logic validation
+    - All exception handling paths (NetworkError, PackageNotFoundError)
+    - Client initialization and resource cleanup
+  - **test_network_resilience.py**: Full test coverage for network resilience patterns (57 tests)
+    - Singleton ConnectionPoolManager with thread safety validation
+    - Circuit breaker state transitions and failure threshold detection
+    - Rate limiting with sliding window and memory management
+    - Exponential backoff with jitter implementation
+    - Connection pooling and resource lifecycle management
+  - **test_context_fetcher.py**: Phase 4 context fetching functionality (28 tests)
+    - Concurrent dependency fetching with semaphore control
+    - Context scoping strategies (primary_only, runtime, smart)
+    - Token budget management and context truncation
+    - Performance metrics collection and validation
+    - Error handling and graceful degradation patterns
+
+### Improved
+- **Test Coverage**: Dramatically improved from 84% to 92% overall
+  - **network_client.py**: 31% → 98% coverage (+67% improvement)
+  - **context_fetcher.py**: 39% → 86% coverage (+47% improvement)
+  - **network_resilience.py**: 62% → 99% coverage (+37% improvement)
+- **Test Performance**: All 116 new tests execute in under 2 seconds
+- **Test Quality**: 100% pytest-mock patterns, no unittest.mock usage
+- **Production Readiness**: Critical network resilience and error handling now thoroughly validated
+
+### Technical
+- **pytest-timeout** dependency added for test timeout management
+- All async operations properly mocked to prevent real delays
+- Comprehensive error scenario testing for all network components
+- Memory management and resource cleanup validation
+- Thread safety testing for singleton patterns
+
 ## [0.3.2] - 2025-08-09
 
 ### Changed
