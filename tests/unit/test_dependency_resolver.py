@@ -1,5 +1,7 @@
 """Tests for dependency resolver functionality."""
 
+import pytest
+
 from autodocs_mcp.core.dependency_resolver import (
     CORE_FRAMEWORKS,
     LOW_PRIORITY_DEPS,
@@ -60,6 +62,7 @@ class TestPackageMetadata:
 class TestDependencyResolver:
     """Test dependency resolver functionality."""
 
+    @pytest.fixture(autouse=True)
     def setup_method(self, mocker):
         """Set up test fixtures."""
         # Mock network client

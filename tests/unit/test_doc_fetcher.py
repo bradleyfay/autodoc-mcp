@@ -14,7 +14,7 @@ from src.autodocs_mcp.models import PackageInfo
 @pytest.fixture
 def mock_config(mocker):
     """Mock configuration for tests."""
-    config = mocker.mocker.Mock()
+    config = mocker.Mock()
     config.pypi_base_url = "https://pypi.org/pypi"
     config.max_concurrent = 5
     config.max_documentation_size = 50000
@@ -77,7 +77,7 @@ class TestPyPIDocumentationFetcher:
     @pytest.mark.asyncio
     async def test_context_manager_initialization(self, fetcher, mocker):
         """Test async context manager properly initializes client."""
-        mock_client = mocker.mocker.AsyncMock()
+        mock_client = mocker.AsyncMock()
 
         with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient",
@@ -95,11 +95,11 @@ class TestPyPIDocumentationFetcher:
     ):
         """Test successful package info fetching."""
         # Mock HTTP response
-        mock_response = mocker.mocker.Mock(spec=Response)
+        mock_response = mocker.Mock(spec=Response)
         mock_response.json.return_value = sample_pypi_response
 
         # Mock resilient client
-        mock_client = mocker.mocker.AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.return_value = mock_response
         fetcher._resilient_client = mock_client
 
@@ -125,7 +125,7 @@ class TestPyPIDocumentationFetcher:
     @pytest.mark.asyncio
     async def test_fetch_package_info_package_not_found(self, fetcher, mocker):
         """Test handling of package not found errors."""
-        mock_client = mocker.mocker.AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = PackageNotFoundError(
             "Package not found"
         )

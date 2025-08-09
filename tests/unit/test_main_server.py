@@ -30,8 +30,8 @@ class TestMCPTools:
         )
 
         # Use mocker instead of unittest.mock
-        mock_parser = mocker.mocker.AsyncMock()
-        mock_parser.parse_project = mocker.mocker.AsyncMock(return_value=mock_result)
+        mock_parser = mocker.AsyncMock()
+        mock_parser.parse_project = mocker.AsyncMock(return_value=mock_result)
         mock_formatter = mocker.patch("autodocs_mcp.main.ResponseFormatter")
         mock_validator = mocker.patch(
             "autodocs_mcp.main.InputValidator.validate_project_path"
@@ -82,7 +82,7 @@ class TestMCPTools:
         )
 
         mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
-        mock_error = mocker.mocker.MagicMock()
+        mock_error = mocker.MagicMock()
         mock_error.message = "Invalid project structure"
         mock_error.suggestion = "Check pyproject.toml"
         mock_error.severity.value = "critical"
