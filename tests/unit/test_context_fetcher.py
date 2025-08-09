@@ -339,6 +339,9 @@ class TestFetchPackageContextWithDependencies:
         self, context_fetcher, sample_package_info, sample_primary_docs, mocker
     ):
         """Test fetching with max_dependencies parameter."""
+        # Reset config to defaults (in case modified by earlier tests)
+        context_fetcher.config.max_context_tokens = 30000
+
         # Setup mocks
         context_fetcher.cache_manager.resolve_and_cache = mocker.AsyncMock(
             return_value=(sample_package_info, True)
