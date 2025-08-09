@@ -1,7 +1,5 @@
 """Unit tests for documentation fetching functionality."""
 
-from unittest.mock import AsyncMock, Mock, patch
-
 import pytest
 from httpx import Response
 
@@ -14,9 +12,9 @@ from src.autodocs_mcp.models import PackageInfo
 
 
 @pytest.fixture
-def mock_config():
+def mock_config(mocker):
     """Mock configuration for tests."""
-    config = Mock()
+    config = mocker.mocker.Mock()
     config.pypi_base_url = "https://pypi.org/pypi"
     config.max_concurrent = 5
     config.max_documentation_size = 50000
@@ -69,19 +67,19 @@ class TestPyPIDocumentationFetcher:
     """Test PyPIDocumentationFetcher functionality."""
 
     @pytest.fixture
-    def fetcher(self, mock_config):
+    def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 
     @pytest.mark.asyncio
-    async def test_context_manager_initialization(self, fetcher):
+    async def test_context_manager_initialization(self, fetcher, mocker):
         """Test async context manager properly initializes client."""
-        mock_client = AsyncMock()
+        mock_client = mocker.mocker.AsyncMock()
 
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient",
             return_value=mock_client,
         ):
@@ -93,15 +91,15 @@ class TestPyPIDocumentationFetcher:
 
     @pytest.mark.asyncio
     async def test_fetch_package_info_success(
-        self, fetcher, sample_pypi_response, sample_package_info
+        self, fetcher, sample_pypi_response, sample_package_info, mocker
     ):
         """Test successful package info fetching."""
         # Mock HTTP response
-        mock_response = Mock(spec=Response)
+        mock_response = mocker.mocker.Mock(spec=Response)
         mock_response.json.return_value = sample_pypi_response
 
         # Mock resilient client
-        mock_client = AsyncMock()
+        mock_client = mocker.mocker.AsyncMock()
         mock_client.get_with_retry.return_value = mock_response
         fetcher._resilient_client = mock_client
 
@@ -125,9 +123,9 @@ class TestPyPIDocumentationFetcher:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_package_info_package_not_found(self, fetcher):
+    async def test_fetch_package_info_package_not_found(self, fetcher, mocker):
         """Test handling of package not found errors."""
-        mock_client = AsyncMock()
+        mock_client = mocker.mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = PackageNotFoundError(
             "Package not found"
         )
@@ -137,9 +135,9 @@ class TestPyPIDocumentationFetcher:
             await fetcher.fetch_package_info("nonexistent-package")
 
     @pytest.mark.asyncio
-    async def test_fetch_package_info_network_error(self, fetcher):
+    async def test_fetch_package_info_network_error(self, fetcher, mocker):
         """Test handling of network errors."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
         fetcher._resilient_client = mock_client
 
@@ -156,15 +154,15 @@ class TestPyPIDocumentationFetcher:
 
     @pytest.mark.asyncio
     async def test_fetch_package_info_safe_success(
-        self, fetcher, sample_pypi_response, sample_package_info
+        self, fetcher, sample_pypi_response, sample_package_info, mocker
     ):
         """Test safe fetch with successful result."""
         # Mock HTTP response
-        mock_response = Mock(spec=Response)
+        mock_response = mocker.Mock(spec=Response)
         mock_response.json.return_value = sample_pypi_response
 
         # Mock resilient client
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.return_value = mock_response
         fetcher._resilient_client = mock_client
 
@@ -181,9 +179,9 @@ class TestPyPIDocumentationFetcher:
         assert result.fetch_time > 0
 
     @pytest.mark.asyncio
-    async def test_fetch_package_info_safe_package_not_found(self, fetcher):
+    async def test_fetch_package_info_safe_package_not_found(self, fetcher, mocker):
         """Test safe fetch handles package not found gracefully."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = PackageNotFoundError(
             "Package not found"
         )
@@ -198,9 +196,9 @@ class TestPyPIDocumentationFetcher:
         assert result.errors[0].error_code is not None
 
     @pytest.mark.asyncio
-    async def test_fetch_package_info_safe_network_error(self, fetcher):
+    async def test_fetch_package_info_safe_network_error(self, fetcher, mocker):
         """Test safe fetch handles network errors gracefully."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
         fetcher._resilient_client = mock_client
 
@@ -213,9 +211,9 @@ class TestPyPIDocumentationFetcher:
         assert result.errors[0].error_code is not None
 
     @pytest.mark.asyncio
-    async def test_fetch_package_info_safe_unexpected_error(self, fetcher):
+    async def test_fetch_package_info_safe_unexpected_error(self, fetcher, mocker):
         """Test safe fetch handles unexpected errors gracefully."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = ValueError("Unexpected error")
         fetcher._resilient_client = mock_client
 
@@ -228,13 +226,15 @@ class TestPyPIDocumentationFetcher:
         assert result.errors[0].error_code is not None
 
     @pytest.mark.asyncio
-    async def test_fetch_multiple_packages_safe(self, fetcher, sample_pypi_response):
+    async def test_fetch_multiple_packages_safe(
+        self, fetcher, sample_pypi_response, mocker
+    ):
         """Test fetching multiple packages safely."""
         # Mock successful responses for both packages
-        mock_response = Mock(spec=Response)
+        mock_response = mocker.Mock(spec=Response)
         mock_response.json.return_value = sample_pypi_response
 
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.return_value = mock_response
         fetcher._resilient_client = mock_client
 
@@ -251,20 +251,20 @@ class TestPyPIDocumentationFetcher:
 
     @pytest.mark.asyncio
     async def test_fetch_multiple_packages_safe_mixed_results(
-        self, fetcher, sample_pypi_response
+        self, fetcher, sample_pypi_response, mocker
     ):
         """Test batch fetch with mixed success/failure results."""
 
         # Mock responses: success for requests, failure for nonexistent
         def mock_get_with_retry(url, **kwargs):
             if "requests" in url:
-                mock_response = Mock(spec=Response)
+                mock_response = mocker.Mock(spec=Response)
                 mock_response.json.return_value = sample_pypi_response
                 return mock_response
             else:
                 raise PackageNotFoundError("Package not found")
 
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.get_with_retry.side_effect = mock_get_with_retry
         fetcher._resilient_client = mock_client
 
@@ -283,18 +283,18 @@ class TestDocumentationFormatting:
     """Test documentation formatting functionality."""
 
     @pytest.fixture
-    def fetcher(self, mock_config):
+    def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 
     def test_format_documentation_basic(
-        self, fetcher, sample_package_info, mock_config
+        self, fetcher, sample_package_info, mock_config, mocker
     ):
         """Test basic documentation formatting."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(sample_package_info)
@@ -308,10 +308,10 @@ class TestDocumentationFormatting:
         assert "**Documentation**: https://requests.readthedocs.io" in formatted
 
     def test_format_documentation_with_query(
-        self, fetcher, sample_package_info, mock_config
+        self, fetcher, sample_package_info, mock_config, mocker
     ):
         """Test documentation formatting with query filtering."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(
@@ -325,7 +325,7 @@ class TestDocumentationFormatting:
         assert "http" in formatted.lower()
 
     def test_format_documentation_size_limits(
-        self, fetcher, sample_package_info, mock_config
+        self, fetcher, sample_package_info, mock_config, mocker
     ):
         """Test documentation size limiting and truncation."""
         # Create package with very long description
@@ -346,7 +346,7 @@ class TestDocumentationFormatting:
         # Set small max size for testing
         mock_config.max_documentation_size = 1000
 
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(long_package)
@@ -381,9 +381,9 @@ class TestPyPIResponseParsing:
     """Test PyPI response parsing functionality."""
 
     @pytest.fixture
-    def fetcher(self, mock_config):
+    def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
@@ -478,9 +478,9 @@ class TestQueryFiltering:
     """Test query-based content filtering functionality."""
 
     @pytest.fixture
-    def fetcher(self, mock_config):
+    def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()

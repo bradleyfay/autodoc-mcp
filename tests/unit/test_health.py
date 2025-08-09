@@ -58,217 +58,221 @@ class TestHealthChecker:
         mock_cache_manager = mocker.AsyncMock()
         mock_cache_manager.get_cache_stats.side_effect = Exception("Cache error")
 
-        with patch("autodocs_mcp.main.cache_manager", mock_cache_manager):
-            result = await self.health_checker.check_cache_manager()
+        mocker.patch("autodocs_mcp.main.cache_manager", mock_cache_manager)
+        result = await self.health_checker.check_cache_manager()
 
-            assert result.name == "cache_manager"
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "Cache error" in result.message
+        assert result.name == "cache_manager"
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "Cache error" in result.message
 
-    async def test_check_pypi_connectivity_healthy(self):
+    async def test_check_pypi_connectivity_healthy(self, mocker):
         """Test PyPI connectivity when working."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.__aenter__.return_value = mock_client
         mock_client.__aexit__.return_value = None
         mock_client.get_with_retry.return_value = {}
 
-        with patch(
+        mock_class = mocker.patch(
             "autodocs_mcp.core.network_resilience.NetworkResilientClient"
-        ) as mock_class:
-            mock_class.return_value = mock_client
+        )
+        mock_class.return_value = mock_client
 
-            result = await self.health_checker.check_pypi_connectivity()
+        result = await self.health_checker.check_pypi_connectivity()
 
-            assert result.name == "pypi_connectivity"
-            assert result.status == HealthStatus.HEALTHY
-            assert "accessible" in result.message.lower()
+        assert result.name == "pypi_connectivity"
+        assert result.status == HealthStatus.HEALTHY
+        assert "accessible" in result.message.lower()
 
-    async def test_check_pypi_connectivity_404_is_healthy(self):
+    async def test_check_pypi_connectivity_404_is_healthy(self, mocker):
         """Test that 404 from PyPI is considered healthy (PyPI is working)."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.__aenter__.return_value = mock_client
         mock_client.__aexit__.return_value = None
         mock_client.get_with_retry.side_effect = Exception("404 not found")
 
-        with patch(
+        mock_class = mocker.patch(
             "autodocs_mcp.core.network_resilience.NetworkResilientClient"
-        ) as mock_class:
-            mock_class.return_value = mock_client
+        )
+        mock_class.return_value = mock_client
 
-            result = await self.health_checker.check_pypi_connectivity()
+        result = await self.health_checker.check_pypi_connectivity()
 
-            assert result.name == "pypi_connectivity"
-            assert result.status == HealthStatus.HEALTHY
-            assert "expected error" in result.message
+        assert result.name == "pypi_connectivity"
+        assert result.status == HealthStatus.HEALTHY
+        assert "expected error" in result.message
 
-    async def test_check_pypi_connectivity_network_error(self):
+    async def test_check_pypi_connectivity_network_error(self, mocker):
         """Test PyPI connectivity with network error."""
-        mock_client = AsyncMock()
+        mock_client = mocker.AsyncMock()
         mock_client.__aenter__.return_value = mock_client
         mock_client.__aexit__.return_value = None
         mock_client.get_with_retry.side_effect = Exception("Connection timeout")
 
-        with patch(
+        mock_class = mocker.patch(
             "autodocs_mcp.core.network_resilience.NetworkResilientClient"
-        ) as mock_class:
-            mock_class.return_value = mock_client
+        )
+        mock_class.return_value = mock_client
 
-            result = await self.health_checker.check_pypi_connectivity()
+        result = await self.health_checker.check_pypi_connectivity()
 
-            assert result.name == "pypi_connectivity"
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "Connection timeout" in result.message
+        assert result.name == "pypi_connectivity"
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "Connection timeout" in result.message
 
-    async def test_check_dependencies_not_initialized(self):
+    async def test_check_dependencies_not_initialized(self, mocker):
         """Test dependency parser when not initialized."""
-        with patch("autodocs_mcp.main.parser", None):
-            result = await self.health_checker.check_dependencies()
+        mocker.patch("autodocs_mcp.main.parser", None)
+        result = await self.health_checker.check_dependencies()
 
-            assert result.name == "dependency_parser"
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "not initialized" in result.message.lower()
+        assert result.name == "dependency_parser"
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "not initialized" in result.message.lower()
 
-    async def test_check_dependencies_healthy(self):
+    async def test_check_dependencies_healthy(self, mocker):
         """Test dependency parser when working."""
-        mock_parser = AsyncMock()
-        mock_result = MagicMock()
+        mock_parser = mocker.AsyncMock()
+        mock_result = mocker.MagicMock()
         mock_result.successful_deps = 1
         mock_parser.parse_project.return_value = mock_result
 
-        with patch("autodocs_mcp.main.parser", mock_parser):
-            result = await self.health_checker.check_dependencies()
+        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        result = await self.health_checker.check_dependencies()
 
-            assert result.name == "dependency_parser"
-            assert result.status == HealthStatus.HEALTHY
-            assert "found 1 dependencies" in result.message
+        assert result.name == "dependency_parser"
+        assert result.status == HealthStatus.HEALTHY
+        assert "found 1 dependencies" in result.message
 
-    async def test_check_dependencies_no_deps_found(self):
+    async def test_check_dependencies_no_deps_found(self, mocker):
         """Test dependency parser when no dependencies found."""
-        mock_parser = AsyncMock()
-        mock_result = MagicMock()
+        mock_parser = mocker.AsyncMock()
+        mock_result = mocker.MagicMock()
         mock_result.successful_deps = 0
         mock_parser.parse_project.return_value = mock_result
 
-        with patch("autodocs_mcp.main.parser", mock_parser):
-            result = await self.health_checker.check_dependencies()
+        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        result = await self.health_checker.check_dependencies()
 
-            assert result.name == "dependency_parser"
-            assert result.status == HealthStatus.DEGRADED
-            assert "found no dependencies" in result.message
+        assert result.name == "dependency_parser"
+        assert result.status == HealthStatus.DEGRADED
+        assert "found no dependencies" in result.message
 
-    async def test_check_dependencies_error(self):
+    async def test_check_dependencies_error(self, mocker):
         """Test dependency parser when erroring."""
-        mock_parser = AsyncMock()
+        mock_parser = mocker.AsyncMock()
         mock_parser.parse_project.side_effect = Exception("Parse error")
 
-        with patch("autodocs_mcp.main.parser", mock_parser):
-            result = await self.health_checker.check_dependencies()
+        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        result = await self.health_checker.check_dependencies()
 
-            assert result.name == "dependency_parser"
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "Parse error" in result.message
+        assert result.name == "dependency_parser"
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "Parse error" in result.message
 
-    async def test_check_context_fetcher_not_initialized(self):
+    async def test_check_context_fetcher_not_initialized(self, mocker):
         """Test context fetcher when not initialized."""
-        with patch("autodocs_mcp.main.context_fetcher", None):
-            result = await self.health_checker.check_context_fetcher()
+        mocker.patch("autodocs_mcp.main.context_fetcher", None)
+        result = await self.health_checker.check_context_fetcher()
 
-            assert result.name == "context_fetcher"
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "not initialized" in result.message.lower()
+        assert result.name == "context_fetcher"
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "not initialized" in result.message.lower()
 
-    async def test_check_context_fetcher_healthy(self):
+    async def test_check_context_fetcher_healthy(self, mocker):
         """Test context fetcher when healthy."""
-        mock_context_fetcher = MagicMock()
-        mock_context_fetcher.cache_manager = MagicMock()
-        mock_context_fetcher.dependency_resolver = MagicMock()
-        mock_context_fetcher.formatter = MagicMock()
+        mock_context_fetcher = mocker.MagicMock()
+        mock_context_fetcher.cache_manager = mocker.MagicMock()
+        mock_context_fetcher.dependency_resolver = mocker.MagicMock()
+        mock_context_fetcher.formatter = mocker.MagicMock()
 
-        with patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher):
-            result = await self.health_checker.check_context_fetcher()
+        mocker.patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher)
+        result = await self.health_checker.check_context_fetcher()
 
-            assert result.name == "context_fetcher"
-            assert result.status == HealthStatus.HEALTHY
-            assert "all components" in result.message
+        assert result.name == "context_fetcher"
+        assert result.status == HealthStatus.HEALTHY
+        assert "all components" in result.message
 
-    async def test_check_context_fetcher_partially_initialized(self):
+    async def test_check_context_fetcher_partially_initialized(self, mocker):
         """Test context fetcher when partially initialized."""
-        mock_context_fetcher = MagicMock()
+        mock_context_fetcher = mocker.MagicMock()
         mock_context_fetcher.cache_manager = None
-        mock_context_fetcher.dependency_resolver = MagicMock()
-        mock_context_fetcher.formatter = MagicMock()
+        mock_context_fetcher.dependency_resolver = mocker.MagicMock()
+        mock_context_fetcher.formatter = mocker.MagicMock()
 
-        with patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher):
-            result = await self.health_checker.check_context_fetcher()
+        mocker.patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher)
+        result = await self.health_checker.check_context_fetcher()
 
-            assert result.name == "context_fetcher"
-            assert result.status == HealthStatus.DEGRADED
-            assert "partially initialized" in result.message
+        assert result.name == "context_fetcher"
+        assert result.status == HealthStatus.DEGRADED
+        assert "partially initialized" in result.message
 
-    async def test_get_overall_health_all_healthy(self):
+    async def test_get_overall_health_all_healthy(self, mocker):
         """Test overall health when all checks are healthy."""
-        with (
-            patch.object(self.health_checker, "check_cache_manager") as mock_cache,
-            patch.object(self.health_checker, "check_pypi_connectivity") as mock_pypi,
-            patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            patch.object(self.health_checker, "check_context_fetcher") as mock_context,
-        ):
-            mock_cache.return_value = HealthCheck(
-                "cache", HealthStatus.HEALTHY, "ok", 10.0, 123.0
-            )
-            mock_pypi.return_value = HealthCheck(
-                "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
-            )
-            mock_deps.return_value = HealthCheck(
-                "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
-            )
-            mock_context.return_value = HealthCheck(
-                "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
-            )
+        mock_cache = mocker.patch.object(self.health_checker, "check_cache_manager")
+        mock_pypi = mocker.patch.object(self.health_checker, "check_pypi_connectivity")
+        mock_deps = mocker.patch.object(self.health_checker, "check_dependencies")
+        mock_context = mocker.patch.object(self.health_checker, "check_context_fetcher")
 
-            result = await self.health_checker.get_overall_health()
+        mock_cache.return_value = HealthCheck(
+            "cache", HealthStatus.HEALTHY, "ok", 10.0, 123.0
+        )
+        mock_pypi.return_value = HealthCheck(
+            "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
+        )
+        mock_deps.return_value = HealthCheck(
+            "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
+        )
+        mock_context.return_value = HealthCheck(
+            "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
+        )
 
-            assert result["status"] == "healthy"
-            assert result["summary"]["healthy"] == 4
-            assert result["summary"]["degraded"] == 0
-            assert result["summary"]["unhealthy"] == 0
-            assert result["summary"]["total"] == 4
+        result = await self.health_checker.get_overall_health()
 
-    async def test_get_overall_health_with_degraded(self):
+        assert result["status"] == "healthy"
+        assert result["summary"]["healthy"] == 4
+        assert result["summary"]["degraded"] == 0
+        assert result["summary"]["unhealthy"] == 0
+        assert result["summary"]["total"] == 4
+
+    async def test_get_overall_health_with_degraded(self, mocker):
         """Test overall health with degraded components."""
-        with (
-            patch.object(self.health_checker, "check_cache_manager") as mock_cache,
-            patch.object(self.health_checker, "check_pypi_connectivity") as mock_pypi,
-            patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            patch.object(self.health_checker, "check_context_fetcher") as mock_context,
-        ):
-            mock_cache.return_value = HealthCheck(
-                "cache", HealthStatus.HEALTHY, "ok", 10.0, 123.0
-            )
-            mock_pypi.return_value = HealthCheck(
-                "pypi", HealthStatus.DEGRADED, "slow", 100.0, 124.0
-            )
-            mock_deps.return_value = HealthCheck(
-                "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
-            )
-            mock_context.return_value = HealthCheck(
-                "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
-            )
+        mock_cache = mocker.patch.object(self.health_checker, "check_cache_manager")
+        mock_pypi = mocker.patch.object(self.health_checker, "check_pypi_connectivity")
+        mock_deps = mocker.patch.object(self.health_checker, "check_dependencies")
+        mock_context = mocker.patch.object(self.health_checker, "check_context_fetcher")
 
-            result = await self.health_checker.get_overall_health()
+        mock_cache.return_value = HealthCheck(
+            "cache", HealthStatus.HEALTHY, "ok", 10.0, 123.0
+        )
+        mock_pypi.return_value = HealthCheck(
+            "pypi", HealthStatus.DEGRADED, "slow", 100.0, 124.0
+        )
+        mock_deps.return_value = HealthCheck(
+            "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
+        )
+        mock_context.return_value = HealthCheck(
+            "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
+        )
 
-            assert result["status"] == "degraded"
-            assert result["summary"]["healthy"] == 3
-            assert result["summary"]["degraded"] == 1
-            assert result["summary"]["unhealthy"] == 0
+        result = await self.health_checker.get_overall_health()
 
-    async def test_get_overall_health_with_unhealthy(self):
+        assert result["status"] == "degraded"
+        assert result["summary"]["healthy"] == 3
+        assert result["summary"]["degraded"] == 1
+        assert result["summary"]["unhealthy"] == 0
+
+    async def test_get_overall_health_with_unhealthy(self, mocker):
         """Test overall health with unhealthy components."""
         with (
-            patch.object(self.health_checker, "check_cache_manager") as mock_cache,
-            patch.object(self.health_checker, "check_pypi_connectivity") as mock_pypi,
-            patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            patch.object(self.health_checker, "check_context_fetcher") as mock_context,
+            mocker.patch.object(
+                self.health_checker, "check_cache_manager"
+            ) as mock_cache,
+            mocker.patch.object(
+                self.health_checker, "check_pypi_connectivity"
+            ) as mock_pypi,
+            mocker.patch.object(self.health_checker, "check_dependencies") as mock_deps,
+            mocker.patch.object(
+                self.health_checker, "check_context_fetcher"
+            ) as mock_context,
         ):
             mock_cache.return_value = HealthCheck(
                 "cache", HealthStatus.UNHEALTHY, "down", 0.0, 123.0
@@ -285,18 +289,24 @@ class TestHealthChecker:
 
             result = await self.health_checker.get_overall_health()
 
-            assert result["status"] == "unhealthy"
-            assert result["summary"]["healthy"] == 3
-            assert result["summary"]["degraded"] == 0
-            assert result["summary"]["unhealthy"] == 1
+        assert result["status"] == "unhealthy"
+        assert result["summary"]["healthy"] == 3
+        assert result["summary"]["degraded"] == 0
+        assert result["summary"]["unhealthy"] == 1
 
-    async def test_get_overall_health_with_exception(self):
+    async def test_get_overall_health_with_exception(self, mocker):
         """Test overall health handling of exceptions."""
         with (
-            patch.object(self.health_checker, "check_cache_manager") as mock_cache,
-            patch.object(self.health_checker, "check_pypi_connectivity") as mock_pypi,
-            patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            patch.object(self.health_checker, "check_context_fetcher") as mock_context,
+            mocker.patch.object(
+                self.health_checker, "check_cache_manager"
+            ) as mock_cache,
+            mocker.patch.object(
+                self.health_checker, "check_pypi_connectivity"
+            ) as mock_pypi,
+            mocker.patch.object(self.health_checker, "check_dependencies") as mock_deps,
+            mocker.patch.object(
+                self.health_checker, "check_context_fetcher"
+            ) as mock_context,
         ):
             mock_cache.side_effect = Exception("Check failed")
             mock_pypi.return_value = HealthCheck(
@@ -311,46 +321,46 @@ class TestHealthChecker:
 
             result = await self.health_checker.get_overall_health()
 
-            assert result["status"] == "unhealthy"
-            assert result["summary"]["healthy"] == 3
-            assert result["summary"]["unhealthy"] == 1
-            assert "unknown_error" in result["checks"]
+        assert result["status"] == "unhealthy"
+        assert result["summary"]["healthy"] == 3
+        assert result["summary"]["unhealthy"] == 1
+        assert "unknown_error" in result["checks"]
 
-    async def test_get_readiness_status_ready(self):
+    async def test_get_readiness_status_ready(self, mocker):
         """Test readiness check when all services ready."""
         with (
-            patch("autodocs_mcp.main.parser", MagicMock()),
-            patch("autodocs_mcp.main.cache_manager", MagicMock()),
-            patch("autodocs_mcp.main.version_resolver", MagicMock()),
-            patch("autodocs_mcp.main.context_fetcher", MagicMock()),
+            mocker.patch("autodocs_mcp.main.parser", mocker.MagicMock()),
+            mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock()),
+            mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock()),
+            mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock()),
         ):
             result = await self.health_checker.get_readiness_status()
 
-            assert result["ready"] is True
-            assert "timestamp" in result
+        assert result["ready"] is True
+        assert "timestamp" in result
 
-    async def test_get_readiness_status_not_ready(self):
+    async def test_get_readiness_status_not_ready(self, mocker):
         """Test readiness check when services not ready."""
         with (
-            patch("autodocs_mcp.main.parser", None),
-            patch("autodocs_mcp.main.cache_manager", MagicMock()),
-            patch("autodocs_mcp.main.version_resolver", MagicMock()),
-            patch("autodocs_mcp.main.context_fetcher", MagicMock()),
+            mocker.patch("autodocs_mcp.main.parser", None),
+            mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock()),
+            mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock()),
+            mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock()),
         ):
             result = await self.health_checker.get_readiness_status()
 
-            assert result["ready"] is False
-            assert "parser" in result["reason"]
-            assert "timestamp" in result
+        assert result["ready"] is False
+        assert "parser" in result["reason"]
+        assert "timestamp" in result
 
-    async def test_get_readiness_status_exception(self):
+    async def test_get_readiness_status_exception(self, mocker):
         """Test readiness check handling exceptions."""
-        with patch("autodocs_mcp.main.parser", side_effect=Exception("Error")):
-            result = await self.health_checker.get_readiness_status()
+        mocker.patch("autodocs_mcp.main.parser", side_effect=Exception("Error"))
+        result = await self.health_checker.get_readiness_status()
 
-            assert result["ready"] is False
-            # Should get either "failed" (from exception) or "Services not initialized" (from None check)
-            assert (
-                "failed" in result["reason"]
-                or "Services not initialized" in result["reason"]
-            )
+        assert result["ready"] is False
+        # Should get either "failed" (from exception) or "Services not initialized" (from None check)
+        assert (
+            "failed" in result["reason"]
+            or "Services not initialized" in result["reason"]
+        )

@@ -4,7 +4,6 @@ import asyncio
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -252,7 +251,9 @@ class TestErrorRecoveryWorkflows:
         assert len(valid_deps) == 1
 
     @pytest.mark.asyncio
-    async def test_network_error_recovery(self, temp_project_dir, temp_cache_dir):
+    async def test_network_error_recovery(
+        self, temp_project_dir, temp_cache_dir, mocker
+    ):
         """Test recovery from network errors."""
         # Create project
         pyproject_content = """
@@ -265,12 +266,12 @@ dependencies = ["requests>=2.28.0"]
         pyproject_path.write_text(pyproject_content)
 
         # Mock network failure for version resolution
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.version_resolver.NetworkResilientClient"
         ) as mock_client_class:
-            mock_client = Mock()
-            mock_client.__aenter__ = Mock(return_value=mock_client)
-            mock_client.__aexit__ = Mock(return_value=None)
+            mock_client = mocker.Mock()
+            mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
+            mock_client.__aexit__ = mocker.Mock(return_value=None)
             mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
             mock_client_class.return_value = mock_client
 
@@ -281,15 +282,15 @@ dependencies = ["requests>=2.28.0"]
                 await version_resolver.resolve_version("requests", ">=2.28.0")
 
     @pytest.mark.asyncio
-    async def test_package_not_found_recovery(self, temp_cache_dir):
+    async def test_package_not_found_recovery(self, temp_cache_dir, mocker):
         """Test recovery from package not found errors."""
         # Mock PyPI client to return 404
-        with patch(
+        with mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient"
         ) as mock_client_class:
-            mock_client = Mock()
-            mock_client.__aenter__ = Mock(return_value=mock_client)
-            mock_client.__aexit__ = Mock(return_value=None)
+            mock_client = mocker.Mock()
+            mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
+            mock_client.__aexit__ = mocker.Mock(return_value=None)
             mock_client.get_with_retry.side_effect = PackageNotFoundError(
                 "Package not found"
             )

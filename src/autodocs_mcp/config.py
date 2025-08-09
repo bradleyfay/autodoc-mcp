@@ -84,7 +84,7 @@ class AutoDocsConfig(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_retry_delays(self):
+    def validate_retry_delays(self) -> "AutoDocsConfig":
         """Ensure max_retry_delay > base_retry_delay."""
         if self.max_retry_delay <= self.base_retry_delay:
             raise ValueError("max_retry_delay must be greater than base_retry_delay")

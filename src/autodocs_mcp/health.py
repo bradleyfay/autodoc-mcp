@@ -1,6 +1,7 @@
 """Health check and monitoring system for AutoDocs MCP Server."""
 
 import asyncio
+import contextlib
 import tempfile
 import time
 from dataclasses import dataclass
@@ -61,11 +62,8 @@ class HealthChecker:
             test_key = "_health_check_test"
 
             # Try to clean up any existing test entry
-            try:
+            with contextlib.suppress(Exception):
                 await main.cache_manager.invalidate(test_key)
-            except Exception:
-                # Ignore cleanup errors
-                pass
 
             # Test cache directory access
             cache_stats = await main.cache_manager.get_cache_stats()
@@ -247,7 +245,7 @@ dependencies = ["requests>=2.0.0"]
             return_exceptions=True,
         )
 
-        health_data = {
+        health_data: dict[str, Any] = {
             "status": "healthy",
             "timestamp": time.time(),
             "checks": {},
@@ -272,6 +270,8 @@ dependencies = ["requests>=2.0.0"]
                 health_data["summary"]["unhealthy"] += 1
                 continue
 
+            # At this point, check must be a HealthCheck (not Exception)
+            assert isinstance(check, HealthCheck)
             health_data["checks"][check.name] = {
                 "status": check.status.value,
                 "message": check.message,

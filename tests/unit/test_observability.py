@@ -105,7 +105,7 @@ class TestMetricsCollector:
 
     def test_finish_request_success(self):
         """Test finishing request successfully."""
-        metrics = self.collector.start_request("req-123", "test_op")
+        self.collector.start_request("req-123", "test_op")
 
         # Finish the request
         self.collector.finish_request(
@@ -130,7 +130,7 @@ class TestMetricsCollector:
 
     def test_finish_request_error(self):
         """Test finishing request with error."""
-        metrics = self.collector.start_request("req-123", "test_op")
+        self.collector.start_request("req-123", "test_op")
 
         # Finish the request with error
         self.collector.finish_request(
@@ -288,7 +288,7 @@ class TestTrackRequestContextManager:
     async def test_track_request_with_exception(self):
         """Test tracking a request that raises an exception."""
         with pytest.raises(ValueError):
-            async with track_request("test_operation") as metrics:
+            async with track_request("test_operation"):
                 raise ValueError("Test error")
 
         # Should still be tracked as a failed request

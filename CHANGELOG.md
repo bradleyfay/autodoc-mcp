@@ -5,34 +5,78 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2025-08-08
+## [0.3.0] - 2025-08-09
 
 ### Added
 - **Phase 3: Enhanced Network Resilience and Error Handling**
   - **Network Resilient Client**: Exponential backoff with jitter for HTTP requests
   - **Circuit Breaker Pattern**: Prevents cascade failures with configurable thresholds
-  - **Rate Limiting**: Sliding window rate limiter to respect API limits
+  - **Rate Limiting**: Sliding window rate limiter to respect API limits with memory bounds
   - **Enhanced Error Messaging**: Structured error formatting with severity levels and suggestions
   - **Doc Fetching Resilience**: Safe batch document fetching with individual error handling
   - **MCP Response Standardization**: Consistent error responses across all MCP tools
   - **Performance Optimizations**:
     - Intelligent documentation truncation for performance
     - Configurable size limits and query filtering
-    - Performance metrics tracking
+    - Performance metrics tracking with correlation IDs
   - **Cache Improvements**: Safe cache entry retrieval with corruption handling
-  - **Branch Management Documentation**: Updated CLAUDE.md with GitFlow workflow instructions
+
+- **Production-Ready Infrastructure**
+  - **Health Check System**: Comprehensive health monitoring with `health_check` and `ready_check` MCP tools
+  - **Observability Framework**: Complete metrics collection, performance tracking, and monitoring integration
+  - **Security Hardening**:
+    - Input validation for package names, version constraints, and project paths
+    - PyPI URL validation with trusted domain allowlist
+    - Path traversal prevention with cache key sanitization
+    - HTTPS enforcement for production environments
+  - **Resource Management**:
+    - Connection pooling with proper cleanup and limits
+    - Graceful shutdown with signal handlers and active request tracking
+    - Memory-bounded rate limiting with automatic cleanup
+  - **Configuration Management**: Pydantic-based validation with production readiness checks
+
+- **Comprehensive Testing and Quality Assurance**
+  - **Enhanced Test Coverage**: Systematic improvement of unit and integration tests
+  - **Test Infrastructure Modernization**: Complete migration to pytest-mock ecosystem
+  - **Security Testing**: Full validation of input sanitization and attack prevention
+  - **Production Validation**: Five-gate validation system for release readiness
+  - **Performance Testing**: Response time validation and resource usage monitoring
+
+- **Documentation and Developer Experience**
+  - **Architecture Documentation**: Complete rewrite of CLAUDE.md with current system architecture
+  - **Technical Debt Management**: Systematic tracking and prioritization of improvements
+  - **Release Validation Framework**: Comprehensive validation gates for production deployment
+  - **Development Workflow**: Enhanced GitFlow processes with release branch validation
 
 ### Changed
 - **Network Operations**: All HTTP requests now use resilient client with retry logic
-- **Error Handling**: Standardized error responses with structured formatting
+- **Error Handling**: Standardized error responses with structured formatting and recovery suggestions
 - **Documentation Formatting**: Added size limits and performance-aware truncation
 - **Version Resolution**: Enhanced with network resilience and retry patterns
-- **Cache Management**: Added safe retrieval methods with error collection
+- **Cache Management**: Added safe retrieval methods with corruption handling and validation
+- **Testing Standards**: Mandatory pytest-mock usage with comprehensive fixture patterns
+- **Configuration Loading**: All 14 configuration parameters now properly validated and loaded
 
 ### Enhanced
-- **Main MCP Server**: All tools now return standardized error responses
-- **PyPI Integration**: Improved reliability with circuit breaker and rate limiting
-- **Logging**: Enhanced structured logging with performance metrics
+- **Main MCP Server**: All 8 tools now return standardized error responses with graceful shutdown
+- **PyPI Integration**: Improved reliability with circuit breaker, rate limiting, and connection pooling
+- **Logging**: Enhanced structured logging with performance metrics and correlation IDs
+- **Security Posture**: Production-ready security controls with comprehensive input validation
+- **Operational Readiness**: Full health check, metrics, and monitoring integration for production deployment
+
+### Fixed
+- **Configuration Loading Issues**: All environment variables and parameters now loading correctly
+- **HTTP Resource Leaks**: Connection pooling with proper lifecycle management implemented
+- **Rate Limiter Memory Growth**: Memory bounds and cleanup mechanisms implemented
+- **Test Infrastructure**: Complete resolution of import and mocking issues across test suite
+- **Type Annotations**: Enhanced type safety across core modules for better reliability
+
+### Security
+- **CVE-Level Vulnerability Fixes**:
+  - URL validation prevents malicious PyPI endpoint attacks
+  - Path traversal prevention in cache operations
+  - Comprehensive input sanitization for all user inputs
+  - Production security controls with HTTPS enforcement
 
 ## [0.2.0] - 2025-08-07
 

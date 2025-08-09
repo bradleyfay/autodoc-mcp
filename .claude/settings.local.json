@@ -13,7 +13,8 @@
       "Bash(timeout 5 uv run:*)",
       "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)",
       "Bash(git merge:*)",
-      "Bash(uv lock:*)"
+      "Bash(uv lock:*)",
+      "Bash(python -m pytest tests/unit/test_config_validation.py::TestAutoDocsConfigValidation::test_default_config_creation -v)"
     ],
     "deny": []
   },

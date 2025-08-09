@@ -3,7 +3,6 @@
 import re
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock
 
 from src.autodocs_mcp.core.error_formatter import (
     ErrorFormatter,
@@ -198,9 +197,9 @@ class TestDependencyParsingErrors:
         assert result.context["original_name"] == "bad@name"
         assert result.context["source"] == "dependencies"
 
-    def test_create_dependency_error_by_type_malformed_extras(self):
+    def test_create_dependency_error_by_type_malformed_extras(self, mocker):
         """Test creating malformed extras error."""
-        match = Mock()
+        match = mocker.Mock()
         match.groups.return_value = ()
 
         result = ErrorFormatter._create_dependency_error_by_type(
@@ -211,9 +210,9 @@ class TestDependencyParsingErrors:
         assert result.context["original_dep"] == "pkg[extra"
         assert result.context["source"] == "dev-dependencies"
 
-    def test_create_dependency_error_by_type_fallback(self):
+    def test_create_dependency_error_by_type_fallback(self, mocker):
         """Test creating error with unknown type falls back gracefully."""
-        match = Mock()
+        match = mocker.Mock()
 
         result = ErrorFormatter._create_dependency_error_by_type(
             "unknown_type", "test-dep", "dependencies", match
@@ -452,11 +451,11 @@ class TestExceptionFormatting:
 class TestResponseFormatter:
     """Test ResponseFormatter functionality."""
 
-    def test_format_scan_response_success(self):
+    def test_format_scan_response_success(self, mocker):
         """Test formatting successful scan response."""
         # Mock scan result
-        mock_result = Mock()
-        mock_result.dependencies = [Mock(), Mock()]  # 2 dependencies
+        mock_result = mocker.Mock()
+        mock_result.dependencies = [mocker.Mock(), mocker.Mock()]  # 2 dependencies
         mock_result.dependencies[0].model_dump.return_value = {
             "name": "requests",
             "version": ">=2.0.0",
@@ -484,11 +483,11 @@ class TestResponseFormatter:
         assert len(result["errors"]) == 0
         assert result["scan_timestamp"] == "2025-01-08T12:00:00"
 
-    def test_format_scan_response_with_errors(self):
+    def test_format_scan_response_with_errors(self, mocker):
         """Test formatting scan response with dependency errors."""
         # Mock scan result with failures
-        mock_result = Mock()
-        mock_result.dependencies = [Mock()]  # 1 successful dependency
+        mock_result = mocker.Mock()
+        mock_result.dependencies = [mocker.Mock()]  # 1 successful dependency
         mock_result.dependencies[0].model_dump.return_value = {
             "name": "requests",
             "version": ">=2.0.0",
@@ -517,10 +516,10 @@ class TestResponseFormatter:
         assert result["errors"][0]["severity"] == "warning"
         assert len(result["suggestions"]) == 1
 
-    def test_format_scan_response_no_dependencies(self):
+    def test_format_scan_response_no_dependencies(self, mocker):
         """Test formatting scan response with no successful dependencies."""
         # Mock scan result with no successful dependencies
-        mock_result = Mock()
+        mock_result = mocker.Mock()
         mock_result.dependencies = []
         mock_result.failed_deps = [
             {
@@ -543,10 +542,10 @@ class TestResponseFormatter:
         assert len(result["errors"]) == 1
         assert result["errors"][0]["code"] == "empty_dependency"
 
-    def test_format_scan_response_error_structure(self):
+    def test_format_scan_response_error_structure(self, mocker):
         """Test the structure of formatted errors in scan response."""
         # Mock scan result with multiple error types
-        mock_result = Mock()
+        mock_result = mocker.Mock()
         mock_result.dependencies = []
         mock_result.failed_deps = [
             {

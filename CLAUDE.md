@@ -1,3 +1,4 @@
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -8,44 +9,112 @@ This is the **AutoDocs MCP Server** project - a **fully implemented** Model Cont
 
 ## Architecture
 
-The project follows a modular SOLID architecture with these implemented core components:
+The project follows a modular, layered architecture with comprehensive separation of concerns. The system is organized into several key layers:
 
-- **dependency_parser.py**: Handles pyproject.toml parsing with graceful degradation for malformed dependencies
-- **doc_fetcher.py**: PyPI JSON API integration with concurrent request handling and AI-optimized formatting
-- **cache_manager.py**: Version-based JSON file caching system (no time expiration)
-- **version_resolver.py**: Converts version constraints to specific versions using PyPI API
-- **main.py**: FastMCP server with four MCP tools and structured logging
+### Core Services Layer (`src/autodocs_mcp/core/`)
+- **dependency_parser.py**: PyProject.toml parsing with graceful degradation for malformed dependencies
+- **dependency_resolver.py**: Enhanced dependency resolution with conflict detection
+- **version_resolver.py**: Version constraint resolution using PyPI API
+- **doc_fetcher.py**: PyPI documentation fetching with concurrent request handling
+- **cache_manager.py**: High-performance JSON file-based caching with version-specific keys
+- **context_fetcher.py**: Phase 4 comprehensive context fetching with dependency analysis
+- **context_formatter.py**: AI-optimized documentation formatting with token management
+- **network_client.py**: HTTP client abstraction with retry logic and connection pooling
+- **network_resilience.py**: Advanced network reliability with circuit breakers and backoff
+- **error_formatter.py**: Structured error handling with user-friendly messages
+
+### Infrastructure Layer (`src/autodocs_mcp/`)
+- **main.py**: FastMCP server with 8 MCP tools, graceful shutdown, and async lifecycle management
+- **config.py**: Comprehensive configuration management with environment validation
+- **security.py**: Input validation and security controls
+- **observability.py**: Metrics collection, performance tracking, and monitoring
+- **health.py**: Health checks for orchestration and load balancing
+- **models.py**: Pydantic data models for type safety
+- **exceptions.py**: Custom exception hierarchy with error context
 
 ## MCP Tools Available
 
-The server exposes four MCP tools:
+The server exposes eight MCP tools organized into three categories:
 
+### Core Documentation Tools
 1. **scan_dependencies**: Parse pyproject.toml and extract dependencies with graceful error handling
-2. **get_package_docs**: Retrieve version-specific cached or fresh documentation from PyPI API
-3. **refresh_cache**: Clear the entire documentation cache
-4. **get_cache_stats**: View cache statistics and cached packages
+2. **get_package_docs**: Legacy single-package documentation tool with version-specific caching
+3. **get_package_docs_with_context**: 🚀 **Primary Phase 4 Tool** - Comprehensive documentation context including dependencies with smart scoping
+
+### Cache Management Tools
+4. **refresh_cache**: Clear the entire documentation cache
+5. **get_cache_stats**: View cache statistics and cached packages
+
+### System Health & Monitoring Tools
+6. **health_check**: Comprehensive health status for monitoring and load balancers
+7. **ready_check**: Kubernetes-style readiness check for deployment orchestration
+8. **get_metrics**: Performance statistics and system metrics for monitoring
+
+### Tool Usage Recommendations
+- **For AI contexts**: Use `get_package_docs_with_context` for rich dependency-aware documentation
+- **For simple lookups**: Use `get_package_docs` for single-package documentation
+- **For development**: Use `scan_dependencies` to understand project structure
+- **For operations**: Use health/ready checks and metrics for deployment monitoring
 
 ## Key Technical Decisions
 
-- **Version-Based Caching**: Cache key format `{package_name}-{version}` with no time expiration
-- **PyPI Integration**: Uses `https://pypi.org/pypi/{package_name}/json` endpoint for both version resolution and documentation
-- **Graceful Degradation**: Continues processing even with malformed dependencies or network failures
-- **Transport**: stdio for MCP protocol compliance with stderr-only logging
-- **Framework**: FastMCP for MCP server implementation
-- **Dependencies**: httpx, pydantic, structlog, packaging, fastmcp
+### Caching & Performance
+- **Version-Based Caching**: Immutable cache keys `{package_name}-{version}` with no time expiration
+- **Concurrent Processing**: Parallel dependency fetching with configurable limits
+- **Connection Pooling**: HTTP connection reuse with automatic cleanup
+- **Circuit Breakers**: Network resilience with exponential backoff
 
-## Implementation Status: COMPLETE ✅
+### Architecture & Reliability
+- **Layered Architecture**: Clear separation between core services and infrastructure
+- **Graceful Degradation**: Continues processing with partial failures and malformed data
+- **Comprehensive Error Handling**: Structured error responses with recovery suggestions
+- **Production Readiness**: Health checks, metrics, graceful shutdown, and configuration validation
+
+### Integration & Protocol
+- **MCP Transport**: stdio protocol compliance with stderr-only logging
+- **PyPI Integration**: `https://pypi.org/pypi/{package_name}/json` for version resolution and documentation
+- **Input Validation**: Security-focused validation for all user inputs
+- **Async Architecture**: Full async support with proper resource management
+
+### Dependencies & Ecosystem
+- **Core Framework**: FastMCP for MCP server implementation
+- **HTTP Client**: httpx for async HTTP operations
+- **Data Validation**: Pydantic v2 for type safety and serialization
+- **Logging**: structlog for structured, production-ready logging
+- **Configuration**: Environment-aware configuration with validation
+- **Testing**: Comprehensive pytest ecosystem (mock, asyncio, httpx, cov, xdist)
+
+### Phase 4 Context Features
+- **Smart Dependency Scoping**: Intelligent selection of relevant dependencies
+- **Token Budget Management**: Automatic context truncation for AI model limits
+- **Dependency Analysis**: Runtime vs dev dependency classification
+- **Context Prioritization**: Most relevant packages selected first
+
+## Implementation Status: PHASE 4 COMPLETE ✅
 
 **Priority 1 (Core Validation)**: ✅ Complete
-- Dependency parsing with graceful degradation
-- MCP protocol integration
-- Comprehensive test coverage
+- Dependency parsing with graceful degradation and security validation
+- MCP protocol integration with 8 comprehensive tools
+- Extensive test coverage with pytest ecosystem
 
 **Priority 2 (Documentation Fetching)**: ✅ Complete
-- PyPI API integration with version resolution
-- Version-based caching system
-- AI-optimized documentation formatting
-- Successfully tested with requests, pydantic, fastapi
+- PyPI API integration with concurrent processing and version resolution
+- High-performance version-based caching system
+- AI-optimized documentation formatting with query filtering
+- Production-tested with major packages (requests, pydantic, fastapi, django, etc.)
+
+**Priority 3 (Graceful Degradation)**: ✅ Complete
+- Network resilience with circuit breakers and exponential backoff
+- Comprehensive error handling with structured user-friendly messages
+- Partial failure recovery with detailed performance metrics
+- Production-ready health checks and monitoring
+
+**Priority 4 (Dependency Context)**: ✅ Complete
+- Smart dependency context fetching with configurable scoping
+- Token budget management for AI model limits
+- Runtime vs development dependency classification
+- Concurrent processing with performance optimization
+- Context prioritization and truncation strategies
 
 ## Installation & Usage
 
@@ -428,6 +497,41 @@ All commits automatically run:
 4. Include both positive and negative test cases
 5. Document any new fixtures in conftest.py
 
-## Future Development
+## Future Development & Enhancement Opportunities
 
-Ready for **Priority 3** (Graceful Degradation) and **Priority 4** (Dependency Context) based on `planning/implementation_priorities.md`. Current implementation already includes significant graceful degradation features.
+### Immediate Robustness Improvements
+1. **Enhanced Input Validation**: Expand security validation patterns for edge cases in package names and version constraints
+2. **Cache Corruption Recovery**: Add automatic cache validation and repair mechanisms for malformed cache entries
+3. **Memory Management**: Implement memory pressure monitoring and automatic cleanup for long-running instances
+4. **Dependency Graph Analysis**: Add circular dependency detection and resolution strategies
+
+### Performance & Scalability Enhancements
+1. **Streaming Context Delivery**: Implement incremental context streaming for very large dependency trees
+2. **Predictive Caching**: Pre-fetch commonly requested packages based on usage patterns
+3. **Delta Documentation**: Cache and deliver only documentation changes between package versions
+4. **Distributed Caching**: Support for Redis or similar backends for multi-instance deployments
+
+### AI Integration Improvements
+1. **Semantic Documentation Filtering**: Use embedding models to identify most relevant documentation sections
+2. **Context Ranking**: ML-based relevance scoring for dependency prioritization
+3. **Documentation Quality Scoring**: Automated assessment of documentation completeness and usefulness
+4. **Custom Context Templates**: User-configurable templates for different AI use cases
+
+### Enterprise & Production Features
+1. **Authentication & Authorization**: Support for API keys, JWT tokens, and role-based access
+2. **Rate Limiting**: Per-client request throttling and quota management
+3. **Multi-tenant Support**: Isolated caching and configuration per client/organization
+4. **Audit Logging**: Comprehensive request/response logging for compliance
+5. **Configuration Hot-reload**: Dynamic configuration updates without service restart
+
+### Monitoring & Observability
+1. **OpenTelemetry Integration**: Full tracing and spans for distributed system visibility
+2. **Custom Metrics**: Business-specific metrics (cache hit rates, package popularity, etc.)
+3. **Alerting Integration**: Proactive monitoring with configurable alert thresholds
+4. **Performance Profiling**: Built-in profiling for identifying bottlenecks
+
+### Documentation & Developer Experience
+1. **Interactive API Documentation**: OpenAPI/Swagger integration for MCP tools
+2. **SDK Generation**: Client libraries for popular programming languages
+3. **CLI Tool Enhancement**: Rich CLI with interactive modes and better output formatting
+4. **Integration Examples**: More comprehensive examples for different AI platforms

@@ -2,6 +2,7 @@
 
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Any
@@ -49,7 +50,7 @@ class RequestMetrics:
 class MetricsCollector:
     """Collect and aggregate performance metrics."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_requests: dict[str, RequestMetrics] = {}
         self.completed_requests: list[RequestMetrics] = []
         self.max_completed = 1000  # Keep last 1000 requests
@@ -68,7 +69,7 @@ class MetricsCollector:
         cache_hit: bool = False,
         package_name: str | None = None,
         dependency_count: int = 0,
-    ):
+    ) -> None:
         """Finish tracking a request."""
         if request_id in self.active_requests:
             metrics = self.active_requests.pop(request_id)
@@ -129,10 +130,8 @@ class MetricsCollector:
                 operations[op]["cache_hits"] += 1
 
         # Calculate averages for operations
-        for op_stats in operations.values():
-            op_requests = [
-                r for r in self.completed_requests if r.operation == op_stats
-            ]
+        for op_name, op_stats in operations.items():
+            op_requests = [r for r in self.completed_requests if r.operation == op_name]
             if op_requests:
                 op_durations = [r.duration_ms for r in op_requests]
                 op_stats["avg_duration_ms"] = round(
@@ -185,7 +184,9 @@ metrics_collector = MetricsCollector()
 
 
 @asynccontextmanager
-async def track_request(operation: str, request_id: str | None = None):
+async def track_request(
+    operation: str, request_id: str | None = None
+) -> AsyncGenerator[RequestMetrics, None]:
     """Context manager to track request metrics."""
     if request_id is None:
         request_id = str(uuid.uuid4())[:8]
@@ -207,12 +208,12 @@ def get_metrics_collector() -> MetricsCollector:
     return metrics_collector
 
 
-def setup_production_logging():
+def setup_production_logging() -> None:
     """Configure structured logging for production."""
     import logging
     import sys
 
-    processors = [
+    processors: list[Any] = [
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
@@ -228,12 +229,12 @@ def setup_production_logging():
     )
 
 
-def setup_development_logging():
+def setup_development_logging() -> None:
     """Configure structured logging for development."""
     import logging
     import sys
 
-    processors = [
+    processors: list[Any] = [
         structlog.processors.TimeStamper(fmt="ISO"),
         structlog.processors.add_log_level,
         structlog.dev.ConsoleRenderer(),  # Pretty console output for dev

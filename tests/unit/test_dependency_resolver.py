@@ -1,7 +1,5 @@
 """Tests for dependency resolver functionality."""
 
-from unittest.mock import AsyncMock, MagicMock
-
 from autodocs_mcp.core.dependency_resolver import (
     CORE_FRAMEWORKS,
     LOW_PRIORITY_DEPS,
@@ -62,16 +60,16 @@ class TestPackageMetadata:
 class TestDependencyResolver:
     """Test dependency resolver functionality."""
 
-    def setup_method(self):
+    def setup_method(self, mocker):
         """Set up test fixtures."""
         # Mock network client
-        self.mock_client = AsyncMock(spec=BasicNetworkClient)
+        self.mock_client = mocker.AsyncMock(spec=BasicNetworkClient)
         self.resolver = DependencyResolver(self.mock_client)
 
-    async def test_resolve_context_dependencies_no_deps(self):
+    async def test_resolve_context_dependencies_no_deps(self, mocker):
         """Test resolving dependencies when package has none."""
         # Mock response for package with no dependencies
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.json.return_value = {
             "info": {
                 "name": "simple-package",
@@ -89,10 +87,10 @@ class TestDependencyResolver:
 
         assert deps == []
 
-    async def test_resolve_context_dependencies_with_deps(self):
+    async def test_resolve_context_dependencies_with_deps(self, mocker):
         """Test resolving dependencies with actual dependencies."""
         # Mock response for fastapi-like package
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.json.return_value = {
             "info": {
                 "name": "fastapi",
@@ -118,9 +116,9 @@ class TestDependencyResolver:
         assert "starlette" in deps
         # typing-extensions is low priority, might be excluded
 
-    async def test_resolve_context_dependencies_with_token_limit(self):
+    async def test_resolve_context_dependencies_with_token_limit(self, mocker):
         """Test token-aware dependency selection."""
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.json.return_value = {
             "info": {
                 "name": "test-package",
@@ -209,9 +207,9 @@ class TestDependencyResolver:
         # Should return empty list gracefully
         assert deps == []
 
-    async def test_get_dependency_metadata_caching(self):
+    async def test_get_dependency_metadata_caching(self, mocker):
         """Test that metadata is cached properly."""
-        mock_response = MagicMock()
+        mock_response = mocker.MagicMock()
         mock_response.json.return_value = {
             "info": {
                 "name": "cached-package",
