@@ -5,6 +5,65 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-08-09
+
+### Added
+- **Development Transparency Features**
+  - Added passion project context explaining intention-only programming approach
+  - Included comprehensive development transparency section with `.claude/` and `.specstory/` folder references
+  - Enhanced project documentation to showcase the complete development process
+  - Added exploration guides for understanding how the project evolved through AI-assisted development
+
+- **Comprehensive Planning Organization**
+  - **New Planning Navigation Index** (`planning/INDEX.md`) - centralized guide to all planning documents
+  - **Structured Planning Hierarchy**: Organized into CORE_REFERENCE, DEVELOPMENT_PHASES, IMPLEMENTATION, EXPANSION, and ARCHIVED sections
+  - **Current Implementation Priorities** - active task tracking and prioritization system
+  - **Archived Legacy Documents** - preserved historical planning documents while maintaining clean structure
+
+### Changed
+- **Enhanced README Documentation**
+  - Updated installation instructions with Claude Code session support
+  - Improved MCP client configuration examples with current environment variable names
+  - Enhanced troubleshooting section with debug guidance and health monitoring commands
+  - Added comprehensive architecture section explaining the layered system design
+  - Updated project statistics reflecting Phase 4 completion (277 tests, 8 MCP tools)
+  - Improved future enhancement roadmap with categorized development opportunities
+
+- **Development Infrastructure Improvements**
+  - Updated environment variable names for consistency (`CACHE_DIR`, `LOG_LEVEL`, `MAX_CONCURRENT`)
+  - Enhanced configuration examples across all MCP client integrations
+  - Improved development workflow documentation with GitFlow branch management
+
+- **Documentation Organization**
+  - Reorganized planning documents into logical hierarchical structure
+  - Moved source-of-truth documents to CORE_REFERENCE for easy access
+  - Archived superseded documents while preserving historical context
+  - Created comprehensive navigation system for all planning materials
+
+### Improved
+- **Developer Experience**
+  - Added clear exploration paths for understanding the development process
+  - Enhanced documentation accuracy with updated command examples and paths
+  - Improved project transparency by showcasing AI-assisted development approach
+  - Better organization of technical documentation and planning materials
+
+- **Project Navigation**
+  - Centralized planning document access through comprehensive index
+  - Clear categorization of documents by development phase and purpose
+  - Easy access to implementation status and current priorities
+  - Preserved historical context while maintaining clean current structure
+
+### Technical
+- **Repository Hygiene**
+  - Added `.claude/settings.local.json` to `.gitignore` for proper local settings exclusion
+  - Removed tracked local settings file containing user-specific permissions
+  - Maintained clean separation between shared and local development configurations
+
+### Development Experience
+- Enhanced project accessibility for new contributors and users exploring the development process
+- Improved documentation quality and accuracy across all integration scenarios
+- Better organized planning and technical documentation for easier navigation
+
 ## [0.3.4] - 2025-08-09
 
 ### Fixed
