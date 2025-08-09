@@ -7,11 +7,11 @@ from pathlib import Path
 
 import click
 
-from autodocs_mcp.config import get_config
-from autodocs_mcp.core.cache_manager import FileCacheManager
-from autodocs_mcp.core.dependency_parser import PyProjectParser
-from autodocs_mcp.core.doc_fetcher import PyPIDocumentationFetcher
-from autodocs_mcp.core.version_resolver import VersionResolver
+from autodoc_mcp.config import get_config
+from autodoc_mcp.core.cache_manager import FileCacheManager
+from autodoc_mcp.core.dependency_parser import PyProjectParser
+from autodoc_mcp.core.doc_fetcher import PyPIDocumentationFetcher
+from autodoc_mcp.core.version_resolver import VersionResolver
 
 
 @click.group()
@@ -71,7 +71,7 @@ def test_scan(project_path):
 @click.option("--project-path", type=click.Path(exists=True), default=".")
 def validate_project(project_path):
     """Validate that a project can be scanned."""
-    from autodocs_mcp.core.dependency_parser import PyProjectParser
+    from autodoc_mcp.core.dependency_parser import PyProjectParser
 
     parser = PyProjectParser()
     project_dir = Path(project_path)

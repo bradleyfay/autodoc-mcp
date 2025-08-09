@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test script to start the MCP server manually for testing."""
 
-from autodocs_mcp.main import main
+from autodoc_mcp.main import main
 
 if __name__ == "__main__":
     print("🚀 Starting AutoDocs MCP Server...")

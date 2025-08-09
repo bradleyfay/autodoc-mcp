@@ -5,12 +5,30 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-08-09
+
+### Changed
+- **Package Name Standardization**
+  - Standardized all package naming to `autodoc-mcp` (removing 's' from autodocs)
+  - Renamed module directory: `src/autodocs_mcp/` → `src/autodoc_mcp/`
+  - Updated script name: `autodocs-mcp` → `autodoc-mcp` in pyproject.toml
+  - Updated cache directory paths: `~/.cache/autodocs-mcp/` → `~/.cache/autodoc-mcp/`
+  - Fixed all import statements across codebase and tests (277 tests still pass)
+  - Updated all configuration files (.mcp.json, pyproject.toml)
+  - Updated all documentation (README.md, CLAUDE.md, CHANGELOG.md)
+  - Updated development scripts and test references
+
+### Technical
+- Complete refactoring to ensure consistent naming throughout the entire codebase
+- All pre-commit hooks pass and full test suite validated
+- No functional changes - purely naming standardization
+
 ## [0.3.1] - 2025-08-09
 
 ### Fixed
 - **README Documentation Accuracy**
   - Corrected development command paths (removed incorrect `src.` prefix)
-  - Fixed MCP configuration examples with proper `autodocs-mcp` entry point
+  - Fixed MCP configuration examples with proper `autodoc-mcp` entry point
   - Updated manual server startup commands for accurate troubleshooting
   - Replaced outdated integration test examples with actual script commands
 
@@ -249,5 +267,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - This release represents a complete, production-ready MCP server
 - Successfully tested with major packages: requests, pydantic, fastapi
 - Ready for integration with AI coding assistants
-- Cache directory defaults to `~/.cache/autodocs-mcp/`
+- Cache directory defaults to `~/.cache/autodoc-mcp/`
 - Supports Python 3.11+ as specified in pyproject.toml

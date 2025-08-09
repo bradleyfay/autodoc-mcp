@@ -13,7 +13,7 @@ class TestMCPServerIntegration:
         """Test that the MCP server help doesn't crash."""
         # Basic smoke test - just ensure the module loads
         result = subprocess.run(
-            [sys.executable, "-c", "import autodocs_mcp.main; print('OK')"],
+            [sys.executable, "-c", "import autodoc_mcp.main; print('OK')"],
             capture_output=True,
             text=True,
             timeout=10,
@@ -23,9 +23,9 @@ class TestMCPServerIntegration:
 
     def test_basic_imports_work(self):
         """Test that core modules can be imported."""
-        from autodocs_mcp.core.cache_manager import FileCacheManager
-        from autodocs_mcp.core.dependency_parser import PyProjectParser
-        from autodocs_mcp.core.version_resolver import VersionResolver
+        from autodoc_mcp.core.cache_manager import FileCacheManager
+        from autodoc_mcp.core.dependency_parser import PyProjectParser
+        from autodoc_mcp.core.version_resolver import VersionResolver
 
         # Just test instantiation doesn't crash
         parser = PyProjectParser()
@@ -40,7 +40,7 @@ class TestMCPServerIntegration:
 
     def test_toml_file_validation(self):
         """Test TOML file validation works."""
-        from autodocs_mcp.core.dependency_parser import PyProjectParser
+        from autodoc_mcp.core.dependency_parser import PyProjectParser
 
         parser = PyProjectParser()
         current_dir = Path(__file__).parent.parent.parent

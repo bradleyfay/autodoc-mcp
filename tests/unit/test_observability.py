@@ -5,7 +5,7 @@ import unittest.mock
 
 import pytest
 
-from autodocs_mcp.observability import (
+from autodoc_mcp.observability import (
     MetricsCollector,
     RequestMetrics,
     get_metrics_collector,
@@ -217,7 +217,7 @@ class TestMetricsCollector:
             time_values.append(current_time + (duration_ms / 1000.0))
 
         with unittest.mock.patch(
-            "autodocs_mcp.observability.time.time", side_effect=time_values
+            "autodoc_mcp.observability.time.time", side_effect=time_values
         ):
             for req_id, operation, success, cache_hit, _duration_ms in requests_data:
                 self.collector.start_request(req_id, operation)
@@ -344,14 +344,14 @@ class TestLoggingConfiguration:
 
     def test_setup_production_logging(self):
         """Test production logging setup."""
-        from autodocs_mcp.observability import setup_production_logging
+        from autodoc_mcp.observability import setup_production_logging
 
         # Should not raise any errors
         setup_production_logging()
 
     def test_setup_development_logging(self):
         """Test development logging setup."""
-        from autodocs_mcp.observability import setup_development_logging
+        from autodoc_mcp.observability import setup_development_logging
 
         # Should not raise any errors
         setup_development_logging()

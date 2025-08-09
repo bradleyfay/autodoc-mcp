@@ -50,7 +50,7 @@ uv sync --all-extras
 uv run pytest
 
 # Start development server
-uv run python -m autodocs_mcp.main
+uv run python -m autodoc_mcp.main
 ```
 
 ## 🔌 Usage
@@ -64,7 +64,7 @@ Add to your Cursor settings (`Cmd+,` → Extensions → Rules for AI → MCP Ser
 {
   "mcpServers": {
     "autodoc-mcp": {
-      "command": "autodocs-mcp",
+      "command": "autodoc-mcp",
       "env": {
         "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
       }
@@ -80,7 +80,7 @@ Add to your claude_desktop_config.json:
 {
   "mcpServers": {
     "autodoc-mcp": {
-      "command": "autodocs-mcp",
+      "command": "autodoc-mcp",
       "env": {
         "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
       }
@@ -95,7 +95,7 @@ Add to your claude_desktop_config.json:
   "mcpServers": {
     "autodoc-mcp": {
       "command": "python",
-      "args": ["-m", "autodocs_mcp.main"],
+      "args": ["-m", "autodoc_mcp.main"],
       "cwd": "/path/to/autodoc-mcp",
       "env": {
         "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
@@ -110,9 +110,9 @@ Add to your claude_desktop_config.json:
 1. **Start the MCP server manually to test:**
    ```bash
    # Should show FastMCP startup screen
-   autodocs-mcp
+   autodoc-mcp
    # Or if installed via uv tool:
-   uv tool run autodoc-mcp autodocs-mcp
+   uv tool run autodoc-mcp autodoc-mcp
    ```
 
 2. **Test in your AI client:**
@@ -275,7 +275,7 @@ export AUTODOCS_MAX_DEPENDENCY_CONTEXT=12
 export AUTODOCS_MAX_CONTEXT_TOKENS=50000
 
 # Use custom cache location
-export AUTODOCS_CACHE_DIR="/tmp/autodocs-cache"
+export AUTODOCS_CACHE_DIR="/tmp/autodoc-cache"
 
 # Enable debug logging
 export AUTODOCS_LOG_LEVEL=DEBUG
@@ -344,8 +344,8 @@ uv run python scripts/dev.py cache-stats
 **MCP client can't connect:**
 - Verify the command path in your MCP configuration
 - Check if `autodoc-mcp` package is installed correctly
-- Test manual server startup: `autodocs-mcp`
-- If using uv tool install: `uv tool run autodoc-mcp autodocs-mcp`
+- Test manual server startup: `autodoc-mcp`
+- If using uv tool install: `uv tool run autodoc-mcp autodoc-mcp`
 
 ### Debug Mode
 
@@ -354,7 +354,7 @@ uv run python scripts/dev.py cache-stats
 export AUTODOCS_LOG_LEVEL=DEBUG
 
 # Run server manually to see debug output
-autodocs-mcp
+autodoc-mcp
 
 # Check cache contents
 ls ~/.autodocs/cache/

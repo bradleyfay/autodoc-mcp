@@ -1,6 +1,6 @@
 """Tests for health check system."""
 
-from autodocs_mcp.health import HealthCheck, HealthChecker, HealthStatus
+from autodoc_mcp.health import HealthCheck, HealthChecker, HealthStatus
 
 
 class TestHealthCheck:
@@ -32,7 +32,7 @@ class TestHealthChecker:
 
     async def test_check_cache_manager_not_initialized(self, mocker):
         """Test cache manager health when not initialized."""
-        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        mocker.patch("autodoc_mcp.main.cache_manager", None)
         result = await self.health_checker.check_cache_manager()
 
         assert result.name == "cache_manager"
@@ -45,7 +45,7 @@ class TestHealthChecker:
         mock_cache_manager.get_cache_stats.return_value = {"total_entries": 5}
         mock_cache_manager.invalidate.return_value = None
 
-        mocker.patch("autodocs_mcp.main.cache_manager", mock_cache_manager)
+        mocker.patch("autodoc_mcp.main.cache_manager", mock_cache_manager)
         result = await self.health_checker.check_cache_manager()
 
         assert result.name == "cache_manager"
@@ -58,7 +58,7 @@ class TestHealthChecker:
         mock_cache_manager = mocker.AsyncMock()
         mock_cache_manager.get_cache_stats.side_effect = Exception("Cache error")
 
-        mocker.patch("autodocs_mcp.main.cache_manager", mock_cache_manager)
+        mocker.patch("autodoc_mcp.main.cache_manager", mock_cache_manager)
         result = await self.health_checker.check_cache_manager()
 
         assert result.name == "cache_manager"
@@ -73,7 +73,7 @@ class TestHealthChecker:
         mock_client.get_with_retry.return_value = {}
 
         mock_class = mocker.patch(
-            "autodocs_mcp.core.network_resilience.NetworkResilientClient"
+            "autodoc_mcp.core.network_resilience.NetworkResilientClient"
         )
         mock_class.return_value = mock_client
 
@@ -91,7 +91,7 @@ class TestHealthChecker:
         mock_client.get_with_retry.side_effect = Exception("404 not found")
 
         mock_class = mocker.patch(
-            "autodocs_mcp.core.network_resilience.NetworkResilientClient"
+            "autodoc_mcp.core.network_resilience.NetworkResilientClient"
         )
         mock_class.return_value = mock_client
 
@@ -109,7 +109,7 @@ class TestHealthChecker:
         mock_client.get_with_retry.side_effect = Exception("Connection timeout")
 
         mock_class = mocker.patch(
-            "autodocs_mcp.core.network_resilience.NetworkResilientClient"
+            "autodoc_mcp.core.network_resilience.NetworkResilientClient"
         )
         mock_class.return_value = mock_client
 
@@ -121,7 +121,7 @@ class TestHealthChecker:
 
     async def test_check_dependencies_not_initialized(self, mocker):
         """Test dependency parser when not initialized."""
-        mocker.patch("autodocs_mcp.main.parser", None)
+        mocker.patch("autodoc_mcp.main.parser", None)
         result = await self.health_checker.check_dependencies()
 
         assert result.name == "dependency_parser"
@@ -135,7 +135,7 @@ class TestHealthChecker:
         mock_result.successful_deps = 1
         mock_parser.parse_project.return_value = mock_result
 
-        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        mocker.patch("autodoc_mcp.main.parser", mock_parser)
         result = await self.health_checker.check_dependencies()
 
         assert result.name == "dependency_parser"
@@ -149,7 +149,7 @@ class TestHealthChecker:
         mock_result.successful_deps = 0
         mock_parser.parse_project.return_value = mock_result
 
-        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        mocker.patch("autodoc_mcp.main.parser", mock_parser)
         result = await self.health_checker.check_dependencies()
 
         assert result.name == "dependency_parser"
@@ -161,7 +161,7 @@ class TestHealthChecker:
         mock_parser = mocker.AsyncMock()
         mock_parser.parse_project.side_effect = Exception("Parse error")
 
-        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        mocker.patch("autodoc_mcp.main.parser", mock_parser)
         result = await self.health_checker.check_dependencies()
 
         assert result.name == "dependency_parser"
@@ -170,7 +170,7 @@ class TestHealthChecker:
 
     async def test_check_context_fetcher_not_initialized(self, mocker):
         """Test context fetcher when not initialized."""
-        mocker.patch("autodocs_mcp.main.context_fetcher", None)
+        mocker.patch("autodoc_mcp.main.context_fetcher", None)
         result = await self.health_checker.check_context_fetcher()
 
         assert result.name == "context_fetcher"
@@ -184,7 +184,7 @@ class TestHealthChecker:
         mock_context_fetcher.dependency_resolver = mocker.MagicMock()
         mock_context_fetcher.formatter = mocker.MagicMock()
 
-        mocker.patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher)
+        mocker.patch("autodoc_mcp.main.context_fetcher", mock_context_fetcher)
         result = await self.health_checker.check_context_fetcher()
 
         assert result.name == "context_fetcher"
@@ -198,7 +198,7 @@ class TestHealthChecker:
         mock_context_fetcher.dependency_resolver = mocker.MagicMock()
         mock_context_fetcher.formatter = mocker.MagicMock()
 
-        mocker.patch("autodocs_mcp.main.context_fetcher", mock_context_fetcher)
+        mocker.patch("autodoc_mcp.main.context_fetcher", mock_context_fetcher)
         result = await self.health_checker.check_context_fetcher()
 
         assert result.name == "context_fetcher"
@@ -315,10 +315,10 @@ class TestHealthChecker:
     async def test_get_readiness_status_ready(self, mocker):
         """Test readiness check when all services ready."""
         with (
-            mocker.patch("autodocs_mcp.main.parser", mocker.MagicMock()),
-            mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock()),
-            mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock()),
-            mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock()),
+            mocker.patch("autodoc_mcp.main.parser", mocker.MagicMock()),
+            mocker.patch("autodoc_mcp.main.cache_manager", mocker.MagicMock()),
+            mocker.patch("autodoc_mcp.main.version_resolver", mocker.MagicMock()),
+            mocker.patch("autodoc_mcp.main.context_fetcher", mocker.MagicMock()),
         ):
             result = await self.health_checker.get_readiness_status()
 
@@ -327,10 +327,10 @@ class TestHealthChecker:
 
     async def test_get_readiness_status_not_ready(self, mocker):
         """Test readiness check when services not ready."""
-        mocker.patch("autodocs_mcp.main.parser", None)
-        mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock())
-        mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock())
-        mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.parser", None)
+        mocker.patch("autodoc_mcp.main.cache_manager", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.version_resolver", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.context_fetcher", mocker.MagicMock())
 
         result = await self.health_checker.get_readiness_status()
 
@@ -340,7 +340,7 @@ class TestHealthChecker:
 
     async def test_get_readiness_status_exception(self, mocker):
         """Test readiness check handling exceptions."""
-        mocker.patch("autodocs_mcp.main.parser", None)
+        mocker.patch("autodoc_mcp.main.parser", None)
         result = await self.health_checker.get_readiness_status()
 
         assert result["ready"] is False

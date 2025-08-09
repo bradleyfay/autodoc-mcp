@@ -1,6 +1,6 @@
 """Tests for context documentation formatter."""
 
-from autodocs_mcp.core.context_formatter import (
+from autodoc_mcp.core.context_formatter import (
     ContextDocumentationFormatter,
     ContextWindowManager,
     DocumentationContext,

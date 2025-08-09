@@ -52,9 +52,9 @@ def mock_services(mocker):
     }
 
     # Patch the global services in main module
-    mocker.patch("autodocs_mcp.main.parser", services["parser"])
-    mocker.patch("autodocs_mcp.main.cache_manager", services["cache_manager"])
-    mocker.patch("autodocs_mcp.main.version_resolver", services["version_resolver"])
-    mocker.patch("autodocs_mcp.main.context_fetcher", services["context_fetcher"])
+    mocker.patch("autodoc_mcp.main.parser", services["parser"])
+    mocker.patch("autodoc_mcp.main.cache_manager", services["cache_manager"])
+    mocker.patch("autodoc_mcp.main.version_resolver", services["version_resolver"])
+    mocker.patch("autodoc_mcp.main.context_fetcher", services["context_fetcher"])
 
     return services
