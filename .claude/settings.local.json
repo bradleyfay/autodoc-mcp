@@ -27,7 +27,10 @@
       "Bash(PYTHONPATH=src uv run python -m pytest tests/unit/test_network_resilience.py --cov=autodoc_mcp.core.network_resilience --cov-report=term-missing)",
       "Bash(python -m pytest tests/unit/test_context_fetcher.py -v)",
       "Bash(python:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__autodoc-mcp__scan_dependencies",
+      "mcp__autodoc-mcp__get_package_docs_with_context",
+      "Bash(uv pip:*)"
     ],
     "deny": []
   },

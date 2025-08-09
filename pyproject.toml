@@ -17,8 +17,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "structlog>=23.2.0",
     "packaging>=23.0",  # For version constraint parsing
-    "requests>=2.28.0",  # NEW: Adding requests to test detection
-    "click>=8.0.0",  # NEW: Adding click
+    "click>=8.0.0",
 ]
 
 [project.optional-dependencies]
@@ -96,6 +95,9 @@ minversion = "7.0"
 addopts = "-ra -q --strict-markers"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "asyncio: marks tests as async (deselect with '-m \"not asyncio\"')",
+]
 
 [tool.coverage.run]
 source = ["src/autodoc_mcp"]
