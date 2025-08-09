@@ -5,6 +5,24 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-08-09
+
+### Changed
+- **Package Name Standardization**
+  - Standardized all package naming to `autodoc-mcp` (removing 's' from autodocs)
+  - Renamed module directory: `src/autodocs_mcp/` → `src/autodoc_mcp/`
+  - Updated script name: `autodocs-mcp` → `autodoc-mcp` in pyproject.toml
+  - Updated cache directory paths: `~/.cache/autodocs-mcp/` → `~/.cache/autodoc-mcp/`
+  - Fixed all import statements across codebase and tests (277 tests still pass)
+  - Updated all configuration files (.mcp.json, pyproject.toml)
+  - Updated all documentation (README.md, CLAUDE.md, CHANGELOG.md)
+  - Updated development scripts and test references
+
+### Technical
+- Complete refactoring to ensure consistent naming throughout the entire codebase
+- All pre-commit hooks pass and full test suite validated
+- No functional changes - purely naming standardization
+
 ## [0.3.1] - 2025-08-09
 
 ### Fixed
