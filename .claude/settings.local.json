@@ -15,7 +15,11 @@
       "Bash(git merge:*)",
       "Bash(uv lock:*)",
       "Bash(python -m pytest tests/unit/test_config_validation.py::TestAutoDocsConfigValidation::test_default_config_creation -v)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr:*)"
     ],
     "deny": []
   },
