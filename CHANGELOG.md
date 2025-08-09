@@ -5,6 +5,26 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2025-08-09
+
+### Fixed
+- **Test Configuration Isolation**
+  - Resolved test interference issues preventing reliable test execution
+  - Fixed asyncio test configuration to prevent cross-test contamination
+  - Added missing pytest plugin dependencies for comprehensive test support
+  - Corrected max_tokens expectation in context fetcher tests for accuracy
+
+### Changed
+- **Documentation Updates**
+  - Updated production operations agent configuration with complete release workflow
+  - Enhanced technical debt tracking to reflect comprehensive debt management
+  - Improved deployment and CI/CD process documentation
+
+### Technical
+- **Test Reliability**: All tests now run in isolation without configuration interference
+- **Plugin Dependencies**: Added pytest-timeout and other missing plugins for robust testing
+- **Production Readiness**: Enhanced operational documentation for deployment management
+
 ## [0.3.3] - 2025-08-09
 
 ### Added
