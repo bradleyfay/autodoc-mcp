@@ -48,7 +48,7 @@ autodocs-mcp/
 - Functionality: Parse pyproject.toml, extract dependencies from [project] table
 - Returns: JSON with package names and version constraints
 
-**get_package_docs** 
+**get_package_docs**
 - Parameters: `package_name` (required), `query` (optional for filtering)
 - Functionality: Check cache, fetch from PyPI if needed, return relevant documentation
 - Returns: Formatted documentation with description, URLs, examples
@@ -72,7 +72,7 @@ autodocs-mcp/
 
 ### Test Package Selection
 **High-quality docs**: Pydantic (clean, well-structured)
-**Overwhelming docs**: pandas (comprehensive but verbose)  
+**Overwhelming docs**: pandas (comprehensive but verbose)
 **Poor docs**: PySpark (Java-heavy, confusing structure)
 **Additional test cases**: Dask, Plotly, MLflow
 
@@ -89,7 +89,7 @@ autodocs-mcp/
 - Validate core assumption about AI performance improvement
 - Test with 3 contrasting packages (Pydantic, pandas, PySpark)
 
-### Phase 2: Smart Context Selection  
+### Phase 2: Smart Context Selection
 - Add query parameter for targeted documentation sections
 - Implement semantic search using local embeddings (Sentence Transformers)
 - Use models like "all-MiniLM-L6-v2" (90MB, runs locally)
@@ -105,22 +105,22 @@ autodocs-mcp/
 
 #### Documentation vs Source Code
 **Hypothesis**: Source code + minimal docs outperforms verbose documentation
-**Rationale**: 
+**Rationale**:
 - LLMs excel at reading source code directly
 - Source code is unambiguous about parameters, returns, edge cases
 - Version-specific source solves training data staleness problem
 
 **Testing Strategy**: A/B test three approaches:
 1. Documentation only
-2. Source code only  
+2. Source code only
 3. Smart hybrid (source + targeted docs)
 
 #### Context Window Management
 **Current Limits**: Claude 3.5 Sonnet (200K tokens), GPT-4 (128K tokens)
 **Token Budget**: Reserve ~20% (40K tokens) for injected context
-**Selection Strategy**: 
+**Selection Strategy**:
 - Typical function: 10-50 tokens
-- Class definition: 100-500 tokens  
+- Class definition: 100-500 tokens
 - Complete module: 1,000-10,000 tokens
 - Prioritize by relevance score, truncate gracefully
 

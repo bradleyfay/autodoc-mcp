@@ -30,7 +30,7 @@ All implementations are substitutable for their interfaces:
 Interfaces are focused and client-specific:
 
 - **Parsing Interface**: Only parse/validate methods, no caching or network concerns
-- **Fetching Interface**: Only fetch/format methods, no file system concerns  
+- **Fetching Interface**: Only fetch/format methods, no file system concerns
 - **Caching Interface**: Only cache operations, no parsing or network concerns
 - **Configuration Interface**: Only configuration methods, no business logic
 
