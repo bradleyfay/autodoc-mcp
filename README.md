@@ -1,5 +1,7 @@
 # AutoDocs MCP Server
 
+> **💡 Passion Project Note**: This is a personal passion project focused on exploring "intention-only programming" - the practice of describing what you want the code to do rather than how to implement it. The development process is completely transparent, and you can explore how this project evolved by examining the `.claude/` (Claude Code agent configurations) and `.specstory/` (session history) folders in this repository.
+
 **Intelligent documentation context provider for AI assistants**
 
 AutoDocs MCP Server automatically provides AI assistants with contextual, version-specific documentation for Python project dependencies. It uses intelligent dependency resolution to include both the requested package and its most relevant dependencies, giving AI assistants comprehensive context for accurate code assistance.
@@ -10,23 +12,32 @@ AutoDocs MCP Server automatically provides AI assistants with contextual, versio
 
 ## ✨ Features
 
-### 🧠 **Phase 4: Dependency Context System**
+### 🧠 **Phase 4: Dependency Context System** *(Complete)*
 - **Smart dependency resolution** with relevance scoring for major frameworks
 - **AI-optimized documentation** extraction with token management
 - **Concurrent fetching** of dependency documentation (3-5 second response times)
 - **Contextual intelligence** - includes 3-8 most relevant dependencies automatically
 
-### 🛠️ **Core Functionality**
-- **Automatic dependency scanning** from pyproject.toml files
-- **Version-specific caching** for optimal performance
+### 🛠️ **Production-Ready Core**
+- **8 comprehensive MCP tools** including system health and monitoring
+- **Network resilience** with circuit breakers and exponential backoff
+- **Version-specific caching** with immutable cache keys for optimal performance
 - **Graceful degradation** with partial results on failures
 - **FastMCP integration** for seamless AI tool compatibility
 
 ### 🎯 **Intelligent Context**
 - **Framework-aware**: Special handling for FastAPI, Django, Flask ecosystems
 - **Token-aware**: Respects context window limits (30k tokens default)
-- **Performance-optimized**: Concurrent requests with caching
+- **Performance-optimized**: Concurrent requests with connection pooling
 - **Configurable scope**: Primary-only, runtime deps, or smart context
+
+### 🔍 **Development Transparency**
+This project demonstrates transparent AI-assisted development:
+- **`.claude/agents/`** - Claude Code agent configurations and specialized contexts
+- **`.specstory/history/`** - Complete session history showing the development process
+- **`planning/`** - Comprehensive planning documents and technical decisions
+
+Explore these folders to see how this project evolved through intention-only programming!
 
 ## 🚀 Installation
 
@@ -46,7 +57,7 @@ git clone https://github.com/bradleyfay/autodoc-mcp.git
 cd autodoc-mcp
 uv sync --all-extras
 
-# Run tests
+# Run tests (277 tests)
 uv run pytest
 
 # Start development server
@@ -57,6 +68,21 @@ uv run python -m autodoc_mcp.main
 
 ### MCP Client Configuration
 
+#### Claude Code Sessions
+To use in Claude Code sessions:
+```bash
+# 1. Install the server in current session
+uv tool install autodoc-mcp
+
+# 2. Start the MCP server (the command is available globally)
+autodoc-mcp
+
+# 3. The server provides 8 MCP tools:
+#    Core: scan_dependencies, get_package_docs, get_package_docs_with_context
+#    Cache: refresh_cache, get_cache_stats
+#    Health: health_check, ready_check, get_metrics
+```
+
 #### Cursor Desktop
 Add to your Cursor settings (`Cmd+,` → Extensions → Rules for AI → MCP Servers):
 
@@ -66,7 +92,8 @@ Add to your Cursor settings (`Cmd+,` → Extensions → Rules for AI → MCP Ser
     "autodoc-mcp": {
       "command": "autodoc-mcp",
       "env": {
-        "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
+        "CACHE_DIR": "~/.cache/autodoc-mcp",
+        "LOG_LEVEL": "INFO"
       }
     }
   }
@@ -82,7 +109,8 @@ Add to your claude_desktop_config.json:
     "autodoc-mcp": {
       "command": "autodoc-mcp",
       "env": {
-        "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
+        "CACHE_DIR": "~/.cache/autodoc-mcp",
+        "LOG_LEVEL": "INFO"
       }
     }
   }
@@ -98,7 +126,9 @@ Add to your claude_desktop_config.json:
       "args": ["-m", "autodoc_mcp.main"],
       "cwd": "/path/to/autodoc-mcp",
       "env": {
-        "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
+        "CACHE_DIR": "~/.cache/autodoc-mcp",
+        "LOG_LEVEL": "INFO",
+        "MAX_CONCURRENT": "10"
       }
     }
   }
@@ -111,8 +141,6 @@ Add to your claude_desktop_config.json:
    ```bash
    # Should show FastMCP startup screen
    autodoc-mcp
-   # Or if installed via uv tool:
-   uv tool run autodoc-mcp autodoc-mcp
    ```
 
 2. **Test in your AI client:**
@@ -121,7 +149,7 @@ Add to your claude_desktop_config.json:
 
 ## 🛠️ Available MCP Tools
 
-The server provides **8 MCP tools** organized into three categories:
+The server provides **8 production-ready MCP tools** organized into three categories:
 
 ### Core Documentation Tools
 
@@ -150,8 +178,8 @@ Scans project dependencies from pyproject.toml files with graceful error handlin
 }
 ```
 
-### `get_package_docs_with_context` ⭐ **Main Feature**
-Retrieves comprehensive documentation context including the requested package and its most relevant dependencies.
+#### `get_package_docs_with_context` ⭐ **Primary Phase 4 Tool**
+Retrieves comprehensive documentation context including the requested package and its most relevant dependencies with smart scoping.
 
 **Parameters:**
 - `package_name` (required): Primary package to document
@@ -195,7 +223,7 @@ Retrieves comprehensive documentation context including the requested package an
         "summary": "Lightweight ASGI framework/toolkit"
       }
     ],
-    "context_scope": "with_runtime (2 deps)",
+    "context_scope": "smart (2 deps)",
     "total_packages": 3,
     "token_estimate": 15420
   },
@@ -207,7 +235,7 @@ Retrieves comprehensive documentation context including the requested package an
 }
 ```
 
-### `get_package_docs` (Legacy)
+#### `get_package_docs` (Legacy)
 Retrieves basic documentation for a single package without dependency context.
 
 **Parameters:**
@@ -235,7 +263,7 @@ Gets statistics about the documentation cache.
 ### System Health & Monitoring Tools
 
 #### `health_check`
-Provides comprehensive system health status for monitoring and load balancer checks.
+Comprehensive health status for monitoring and load balancer checks.
 
 **Returns:**
 - Overall health status of all system components
@@ -250,7 +278,7 @@ Kubernetes-style readiness check for deployment orchestration.
 - Readiness for handling requests
 
 #### `get_metrics`
-Provides system performance metrics for monitoring.
+System performance metrics for monitoring.
 
 **Returns:**
 - Performance statistics and metrics
@@ -262,47 +290,59 @@ Provides system performance metrics for monitoring.
 
 ### Environment Variables
 
-- **`AUTODOCS_CACHE_DIR`**: Cache directory (default: `~/.autodocs/cache`)
-- **`AUTODOCS_MAX_DEPENDENCY_CONTEXT`**: Max dependencies in context (default: 8)
-- **`AUTODOCS_MAX_CONTEXT_TOKENS`**: Token budget for context (default: 30000)
-- **`AUTODOCS_LOG_LEVEL`**: Logging level (default: INFO)
+- **`CACHE_DIR`**: Cache directory (default: `~/.cache/autodoc-mcp`)
+- **`MAX_DEPENDENCY_CONTEXT`**: Max dependencies in context (default: 8)
+- **`MAX_CONTEXT_TOKENS`**: Token budget for context (default: 30000)
+- **`LOG_LEVEL`**: Logging level (default: INFO)
+- **`MAX_CONCURRENT`**: Maximum concurrent PyPI requests (default: 10)
 
 ### Advanced Configuration
 
 ```bash
 # Increase context size for complex projects
-export AUTODOCS_MAX_DEPENDENCY_CONTEXT=12
-export AUTODOCS_MAX_CONTEXT_TOKENS=50000
+export MAX_DEPENDENCY_CONTEXT=12
+export MAX_CONTEXT_TOKENS=50000
 
 # Use custom cache location
-export AUTODOCS_CACHE_DIR="/tmp/autodoc-cache"
+export CACHE_DIR="/tmp/autodoc-cache"
 
 # Enable debug logging
-export AUTODOCS_LOG_LEVEL=DEBUG
+export LOG_LEVEL=DEBUG
+
+# Adjust concurrency for network conditions
+export MAX_CONCURRENT=5
 ```
 
 ## 🏗️ Architecture
 
+### Layered Architecture (Phase 4 Complete)
+- **Core Services Layer** (`src/autodoc_mcp/core/`): 10 specialized modules for dependency parsing, resolution, fetching, caching, and context management
+- **Infrastructure Layer** (`src/autodoc_mcp/`): MCP server, configuration, security, observability, health checks
+- **Network Resilience**: Circuit breakers, exponential backoff, connection pooling
+- **Production Ready**: Graceful shutdown, comprehensive error handling, structured logging
+
 ### Intelligent Dependency Resolution
-- **Relevance scoring**: Core frameworks (FastAPI, Django) get priority
+- **Relevance scoring**: Core frameworks (FastAPI, Django, Flask) get priority
 - **Package relationships**: Framework-specific dependency boosts
-- **Token awareness**: Respects context window limits
-- **Graceful degradation**: Partial results when some deps fail
+- **Token awareness**: Respects context window limits with automatic truncation
+- **Smart scoping**: Runtime vs development dependency classification
+- **Graceful degradation**: Partial results when some dependencies fail
 
 ### Performance Optimizations
-- **Version-based caching**: Immutable package versions cached indefinitely
-- **Concurrent fetching**: Up to 5 simultaneous PyPI requests
-- **Smart timeouts**: 15-second max for dependency fetching
-- **Circuit breakers**: Prevents cascade failures
+- **Version-based caching**: Immutable package versions cached indefinitely with `{package}-{version}.json` keys
+- **Concurrent fetching**: Up to 10 simultaneous PyPI requests with connection pooling
+- **Smart timeouts**: 15-second max for dependency fetching with exponential backoff
+- **Circuit breakers**: Prevents cascade failures with automatic recovery
 
 ### AI-Optimized Output
-- **Structured data**: Clean JSON with consistent formatting
-- **Token estimation**: Helps AI clients manage context windows
-- **Relevance filtering**: Only includes most important information
-- **Context metadata**: Clear indication of what was included/excluded
+- **Structured data**: Clean JSON with consistent formatting and metadata
+- **Token estimation**: Helps AI clients manage context windows effectively
+- **Relevance filtering**: Only includes most important information based on scoring
+- **Context metadata**: Clear indication of what was included/excluded and why
 
 ## 🧪 Testing
 
+### Comprehensive Test Suite (277 Tests)
 ```bash
 # Run all tests
 uv run pytest
@@ -320,7 +360,14 @@ uv run mypy src
 uv run python scripts/dev.py test-scan
 uv run python scripts/dev.py test-docs fastapi ">=0.100.0"
 uv run python scripts/dev.py cache-stats
+uv run python scripts/dev.py clear-cache
 ```
+
+### Development Standards
+- **Conventional Commits**: All commits follow conventional commit standards
+- **Pre-commit Hooks**: Automated linting, formatting, and type checking
+- **pytest Ecosystem**: pytest-mock, pytest-asyncio, pytest-cov, pytest-xdist
+- **Security Focused**: Input validation and security controls throughout
 
 ## 🤔 Troubleshooting
 
@@ -328,7 +375,7 @@ uv run python scripts/dev.py cache-stats
 
 **"Context fetcher not initialized" error:**
 - Ensure the MCP server started successfully
-- Check logs for initialization errors
+- Check logs for initialization errors with `LOG_LEVEL=DEBUG`
 - Verify network connectivity to PyPI
 
 **"No dependencies found" for known packages:**
@@ -340,35 +387,79 @@ uv run python scripts/dev.py cache-stats
 - Dependencies are fetched on first request (cache miss)
 - Subsequent requests use cache (much faster)
 - Network latency to PyPI affects first-time fetching
+- Adjust `MAX_CONCURRENT` for network conditions
 
 **MCP client can't connect:**
 - Verify the command path in your MCP configuration
-- Check if `autodoc-mcp` package is installed correctly
+- Check if `autodoc-mcp` package is installed correctly: `autodoc-mcp --version`
 - Test manual server startup: `autodoc-mcp`
-- If using uv tool install: `uv tool run autodoc-mcp autodoc-mcp`
+- Check server logs with `LOG_LEVEL=DEBUG`
 
 ### Debug Mode
 
 ```bash
 # Enable debug logging
-export AUTODOCS_LOG_LEVEL=DEBUG
+export LOG_LEVEL=DEBUG
 
 # Run server manually to see debug output
 autodoc-mcp
 
 # Check cache contents
-ls ~/.autodocs/cache/
+ls ~/.cache/autodoc-mcp/
 
-# For development testing
+# View cache statistics
+uv run python scripts/dev.py cache-stats
+
+# Test specific functionality
 uv run python scripts/dev.py --help
 ```
 
-## 🔮 Roadmap
+### Health Monitoring
 
-- **Multi-language support**: Expand beyond Python packages
-- **Enhanced relevance scoring**: Machine learning-based dependency ranking
-- **Semantic search**: Query-based documentation filtering
-- **Performance monitoring**: Built-in metrics and alerting
+```bash
+# Check system health (using the MCP tools)
+# Ask your AI assistant: "Check the health status of AutoDocs"
+# This uses the health_check MCP tool
+
+# View performance metrics
+# Ask your AI assistant: "Show me AutoDocs performance metrics"
+# This uses the get_metrics MCP tool
+```
+
+## 🔮 Future Enhancements
+
+### Immediate Robustness (Technical Debt)
+- Enhanced input validation for edge cases
+- Memory pressure monitoring for long-running instances
+- Cache corruption recovery mechanisms
+- Dependency graph analysis with circular dependency detection
+
+### Performance & Scalability
+- Streaming context delivery for large dependency trees
+- Predictive caching based on usage patterns
+- Delta documentation (changes between versions)
+- Distributed caching with Redis support
+
+### AI Integration
+- Semantic documentation filtering with embedding models
+- ML-based relevance scoring for dependency prioritization
+- Documentation quality assessment
+- Custom context templates for different AI use cases
+
+### Enterprise Features
+- Authentication & authorization (API keys, JWT)
+- Rate limiting and quota management
+- Multi-tenant support with isolated caching
+- OpenTelemetry integration for distributed tracing
+
+## 📊 Project Statistics
+
+- **Version**: 0.3.4 (Phase 4 Complete)
+- **Architecture**: Layered with 10 core service modules
+- **Test Coverage**: 277 comprehensive tests
+- **MCP Tools**: 8 production-ready tools
+- **Dependencies**: Minimal, production-focused
+- **Language Support**: Python (with plans for multi-language)
 
 ## 📄 License
 
@@ -382,6 +473,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 4. Run tests and linting (`uv run pytest && uv run ruff check`)
 5. Create a Pull Request
 
+### Development Workflow
+- **Work on `develop` branch** for most changes
+- **Use `feature/*` branches** for larger features
+- **Create `release/v0.x.x` branches** for version releases
+- **All commits must pass pre-commit hooks** (never use `--no-verify`)
+
 ---
 
-**Built with ❤️ using [FastMCP](https://github.com/jlowin/fastmcp)**
+**Built with ❤️ using [FastMCP](https://github.com/jlowin/fastmcp) and intention-only programming**
