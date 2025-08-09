@@ -362,7 +362,7 @@ class TestFetchPackageContextWithDependencies:
             package_name="requests",
             version="2.28.0",
             max_dependencies=3,
-            max_tokens=50000,  # Default from config
+            max_tokens=30000,  # Default from config
         )
 
     @pytest.mark.asyncio
