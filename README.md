@@ -2,6 +2,10 @@
 
 AutoDocs MCP Server automatically provides AI assistants with contextual, version-specific documentation for Python project dependencies, eliminating manual package lookup and providing more accurate coding assistance.
 
+<a href="https://glama.ai/mcp/servers/@bradleyfay/autodoc-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@bradleyfay/autodoc-mcp/badge" alt="AutoDocs Server MCP server" />
+</a>
+
 ## Features
 
 - **Automatic Dependency Scanning**: Parse pyproject.toml files and extract dependency information
