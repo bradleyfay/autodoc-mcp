@@ -11,7 +11,7 @@
       "Bash(uv run:*)",
       "Bash(git checkout:*)",
       "Bash(timeout 5 uv run:*)",
-      "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)",
+      "Bash(gtimeout 5 uv run python -m src.autodoc_mcp.main)",
       "Bash(git merge:*)",
       "Bash(uv lock:*)",
       "Bash(python -m pytest tests/unit/test_config_validation.py::TestAutoDocsConfigValidation::test_default_config_creation -v)",
@@ -30,12 +30,16 @@
       "Bash(grep:*)",
       "mcp__autodoc-mcp__scan_dependencies",
       "mcp__autodoc-mcp__get_package_docs_with_context",
-      "Bash(uv pip:*)"
+      "Bash(uv pip:*)",
+      "Bash(gh run watch:*)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(mv:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "autodocs-mcp"
+    "autodoc-mcp"
   ]
 }
