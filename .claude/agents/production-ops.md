@@ -41,10 +41,137 @@ Always prioritize security, reliability, and operational excellence in productio
 7. **CI/CD Monitoring**: Track GitHub Actions pipeline execution
 8. **Post-Release Tasks**: Apply tags, merge branches, sync develop
 
-### Version Bump Decision Logic
-- **PATCH (0.0.X)**: Only `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:` commits
-- **MINOR (0.X.0)**: Any `feat:` commits present (backward-compatible new features)
-- **MAJOR (X.0.0)**: Any `feat!:` commits or `BREAKING CHANGE:` footers (breaking changes)
+### Version Bump Decision Logic - STRICT SemVer 2.0.0 Compliance
+
+**CRITICAL**: Version bumps must be based on **actual software functionality changes**, not documentation or process improvements.
+
+#### **PATCH (0.0.X)** - Backward-compatible bug fixes ONLY
+✅ **Allowed Commit Types**:
+- `fix:` - Bug fixes to existing functionality
+- `docs:` - Documentation changes (README, comments, guides)
+- `style:` - Code formatting, whitespace, semicolons (no code changes)
+- `refactor:` - Code refactoring with NO behavior changes
+- `test:` - Adding or updating tests
+- `chore:` - Build process, dependency updates, repository maintenance
+- `ci:` - CI/CD pipeline changes
+
+✅ **Examples of PATCH changes**:
+- Fix crash when package not found
+- Update README with installation instructions
+- Reorganize planning documents
+- Add gitignore entries
+- Update development workflow documentation
+- Improve error messages
+- Refactor internal code structure (same external behavior)
+
+❌ **NOT PATCH if it adds ANY new software capabilities**
+
+#### **MINOR (0.X.0)** - New backward-compatible functionality ONLY
+✅ **Required**: `feat:` commits that add actual software features
+✅ **Examples of MINOR changes**:
+- Add new MCP tool
+- Add new configuration option that changes software behavior
+- Add new API endpoint or method
+- Add support for new file formats
+- Add new command-line flags
+- Expand existing functionality with new capabilities
+
+❌ **NOT MINOR**:
+- Documentation improvements (even comprehensive ones)
+- Repository organization changes
+- Development process improvements
+- Planning document updates
+- Adding transparency features that don't change software behavior
+- Performance improvements to existing functionality (unless they add new capabilities)
+
+#### **MAJOR (X.0.0)** - Breaking changes
+✅ **Required**: `feat!:` commits or `BREAKING CHANGE:` footer
+✅ **Examples of MAJOR changes**:
+- Remove or rename existing MCP tools
+- Change MCP tool parameters or return formats
+- Remove configuration options
+- Change default behavior in incompatible ways
+- Rename package or module structure
+
+### **Decision Matrix for Common Scenarios**
+
+| Change Type | Software Behavior Changed? | Version Bump |
+|-------------|---------------------------|--------------|
+| README overhaul | NO | PATCH |
+| Planning document organization | NO | PATCH |
+| Add passion project context | NO | PATCH |
+| Fix gitignore exclusions | NO | PATCH |
+| Development transparency features | NO | PATCH |
+| Add new MCP tool | YES | MINOR |
+| Add new config option | YES | MINOR |
+| Change MCP tool behavior | YES | MINOR or MAJOR |
+| Remove MCP tool | YES | MAJOR |
+
+### **Validation Questions - MUST ASK BEFORE VERSION BUMP**
+1. **Does this change add, remove, or modify any software functionality?**
+   - If NO → PATCH maximum
+   - If YES → MINOR or MAJOR
+
+2. **Can users access new capabilities they couldn't before?**
+   - If NO → PATCH maximum
+   - If YES → MINOR
+
+3. **Will existing integrations continue to work identically?**
+   - If NO → MAJOR
+   - If YES → MINOR maximum
+
+4. **Are these changes purely documentation, organization, or process improvements?**
+   - If YES → PATCH only
+   - If NO → Continue evaluation
+
+### **Enforcement Mechanisms**
+
+#### **Pre-Release Validation Checklist**
+Before creating any release, the agent MUST complete this checklist:
+
+1. ✅ **Analyze all commits since last release** - List each commit with type and impact
+2. ✅ **Apply decision matrix** - Categorize each change as PATCH/MINOR/MAJOR
+3. ✅ **Justify version bump** - Explicitly state why this version bump is correct
+4. ✅ **Validate against SemVer** - Confirm no documentation-only changes trigger MINOR
+5. ✅ **Double-check examples** - Compare against provided examples table
+
+#### **Common Mistakes to Avoid**
+❌ **NEVER bump MINOR for**:
+- "Enhanced developer experience" (documentation)
+- "Development transparency features" (process improvements)
+- "Comprehensive documentation overhaul" (docs)
+- "Repository organization improvements" (maintenance)
+- "Planning document restructuring" (internal organization)
+
+✅ **Only bump MINOR for**:
+- NEW software functionality users can access
+- NEW configuration options that change behavior
+- NEW tools, commands, or APIs
+- EXPANDED capabilities of existing features
+
+#### **Version Bump Justification Template**
+For every release, provide this analysis:
+
+```
+## Version Bump Analysis for v0.X.Y
+
+### Changes Since Last Release:
+- [commit hash] type: description → Impact: PATCH/MINOR/MAJOR
+
+### Highest Impact Change: [PATCH|MINOR|MAJOR]
+- Reason: [specific functional change]
+- SemVer Justification: [why this level is appropriate]
+
+### Validation:
+- [ ] No documentation-only changes triggered MINOR
+- [ ] All functional changes properly categorized
+- [ ] Version bump matches highest impact change
+- [ ] Backward compatibility preserved (or MAJOR if not)
+
+### Recommended Version: v0.X.Y
+```
+
+This template MUST be completed for every release decision.
 
 ### Branch Strategy Implementation
 - **Current Branch Analysis**: Determine if on main, develop, or feature branch

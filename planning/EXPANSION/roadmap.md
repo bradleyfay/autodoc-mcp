@@ -25,6 +25,7 @@ Transform AutoDocs into the **universal documentation intelligence system** that
 
 | Initiative | Value | Effort | Market Size | Technical Risk | Timeline | ROI Score |
 |-----------|-------|--------|-------------|----------------|----------|-----------|
+| **Development Setup Documentation** | High | Low | Universal | Low | 2-3 days | ⭐⭐⭐⭐⭐ |
 | **GitHub Integration** | High | Medium | Universal | Low | 1-2 weeks | ⭐⭐⭐⭐⭐ |
 | **Node.js Support** | High | Medium | Huge (65% devs) | Low | 2-3 weeks | ⭐⭐⭐⭐⭐ |
 | **Read the Docs** | Medium | Low | Python Heavy | Low | 1 week | ⭐⭐⭐⭐ |
