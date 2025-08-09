@@ -477,7 +477,7 @@ class TestGracefulShutdown:
             shutdown_handler.active_requests = 0
 
         mock_cleanup = mocker.patch.object(shutdown_handler, "_cleanup_resources")
-        mocker.patch("asyncio.sleep", side_effect=[None, None])
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         mock_cleanup.return_value = None
         shutdown_handler.shutdown_event.set()
@@ -514,7 +514,9 @@ class TestGracefulShutdown:
 
         shutdown_handler = GracefulShutdown()
 
-        mock_pool_class = mocker.patch("autodocs_mcp.main.ConnectionPoolManager")
+        mock_pool_class = mocker.patch(
+            "autodocs_mcp.core.network_resilience.ConnectionPoolManager"
+        )
         mocker.patch("autodocs_mcp.main.cache_manager")
 
         mock_pool_manager = mocker.AsyncMock()

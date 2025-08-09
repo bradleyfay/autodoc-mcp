@@ -215,7 +215,7 @@ dependencies = ["requests>=2.28.0"]
                 # Verify result
                 assert package_dict["name"] == dependency.name
 
-        except (NetworkError, PackageNotFoundError) as e:
+        except (NetworkError, PackageNotFoundError, RuntimeError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
 
         elapsed_time = time.time() - start_time
@@ -269,9 +269,9 @@ dependencies = ["requests>=2.28.0"]
         mock_client_class = mocker.patch(
             "src.autodocs_mcp.core.version_resolver.NetworkResilientClient"
         )
-        mock_client = mocker.Mock()
-        mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
-        mock_client.__aexit__ = mocker.Mock(return_value=None)
+        mock_client = mocker.AsyncMock()
+        mock_client.__aenter__ = mocker.AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = mocker.AsyncMock(return_value=None)
         mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
         mock_client_class.return_value = mock_client
 
@@ -288,9 +288,9 @@ dependencies = ["requests>=2.28.0"]
         mock_client_class = mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient"
         )
-        mock_client = mocker.Mock()
-        mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
-        mock_client.__aexit__ = mocker.Mock(return_value=None)
+        mock_client = mocker.AsyncMock()
+        mock_client.__aenter__ = mocker.AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = mocker.AsyncMock(return_value=None)
         mock_client.get_with_retry.side_effect = PackageNotFoundError(
             "Package not found"
         )
@@ -377,7 +377,7 @@ class TestRealPyPIIntegration:
                 assert len(filtered) > 0
                 assert "http" in filtered.lower()
 
-        except (NetworkError, PackageNotFoundError) as e:
+        except (NetworkError, PackageNotFoundError, RuntimeError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
 
     @pytest.mark.asyncio

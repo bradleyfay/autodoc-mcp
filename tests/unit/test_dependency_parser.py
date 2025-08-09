@@ -3,7 +3,6 @@
 import pytest
 
 from autodocs_mcp.core.dependency_parser import PyProjectParser
-from autodocs_mcp.exceptions import ProjectParsingError
 
 
 class TestPyProjectParser:
@@ -47,16 +46,24 @@ class TestPyProjectParser:
 
     async def test_parse_missing_file(self, parser, temp_dir):
         """Test parsing when pyproject.toml is missing."""
-        with pytest.raises(ProjectParsingError, match="not found"):
-            await parser.parse_project(temp_dir)
+        result = await parser.parse_project(temp_dir)
+        assert len(result.dependencies) == 0
+        assert result.project_name == "unknown"
+        assert len(result.errors) == 1
+        assert "not found" in result.errors[0]
+        assert result.partial_success is True
 
     async def test_parse_invalid_toml(self, parser, temp_dir):
         """Test parsing invalid TOML syntax."""
         invalid_path = temp_dir / "pyproject.toml"
         invalid_path.write_text("invalid toml [content")
 
-        with pytest.raises(ProjectParsingError, match="Invalid TOML"):
-            await parser.parse_project(temp_dir)
+        result = await parser.parse_project(temp_dir)
+        assert len(result.dependencies) == 0
+        assert result.project_name == "unknown"
+        assert len(result.errors) == 1
+        assert "Invalid TOML" in result.errors[0]
+        assert result.partial_success is True
 
     async def test_parse_no_project_section(self, parser, temp_dir):
         """Test parsing TOML without [project] section."""

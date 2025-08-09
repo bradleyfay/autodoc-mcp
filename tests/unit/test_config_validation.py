@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
@@ -168,7 +169,7 @@ class TestAutoDocsConfigValidation:
                 # Restore permissions for cleanup
                 cache_path.chmod(0o755)
 
-    def test_from_env_basic(self, mocker):
+    def test_from_env_basic(self):
         """Test loading configuration from environment."""
         env_vars = {
             "AUTODOCS_MAX_CONCURRENT": "20",
@@ -178,7 +179,7 @@ class TestAutoDocsConfigValidation:
             "AUTODOCS_DEBUG": "true",
         }
 
-        with mocker.patch.dict(os.environ, env_vars, clear=False):
+        with patch.dict(os.environ, env_vars, clear=False):
             config = AutoDocsConfig.from_env()
 
             assert config.max_concurrent == 20
@@ -187,29 +188,29 @@ class TestAutoDocsConfigValidation:
             assert config.environment == "staging"
             assert config.debug_mode is True
 
-    def test_from_env_with_cache_dir(self, mocker):
+    def test_from_env_with_cache_dir(self):
         """Test loading cache directory from environment."""
         with tempfile.TemporaryDirectory() as temp_dir:
             env_vars = {
                 "AUTODOCS_CACHE_DIR": temp_dir,
             }
 
-            with mocker.patch.dict(os.environ, env_vars, clear=False):
+            with patch.dict(os.environ, env_vars, clear=False):
                 config = AutoDocsConfig.from_env()
                 assert config.cache_dir == Path(temp_dir)
 
-    def test_from_env_invalid_values(self, mocker):
+    def test_from_env_invalid_values(self):
         """Test handling invalid environment variable values."""
         env_vars = {
             "AUTODOCS_MAX_CONCURRENT": "invalid",
         }
 
-        with mocker.patch.dict(os.environ, env_vars, clear=False):
+        with patch.dict(os.environ, env_vars, clear=False):
             with pytest.raises(ValueError) as exc_info:
                 AutoDocsConfig.from_env()
             assert "Configuration validation failed" in str(exc_info.value)
 
-    def test_from_env_boolean_conversion(self, mocker):
+    def test_from_env_boolean_conversion(self):
         """Test boolean conversion from environment."""
         test_cases = [
             ("true", True),
@@ -223,11 +224,11 @@ class TestAutoDocsConfigValidation:
         for env_value, expected in test_cases:
             env_vars = {"AUTODOCS_DEBUG": env_value}
 
-            with mocker.patch.dict(os.environ, env_vars, clear=False):
+            with patch.dict(os.environ, env_vars, clear=False):
                 config = AutoDocsConfig.from_env()
                 assert config.debug_mode is expected
 
-    def test_from_env_numeric_conversions(self, mocker):
+    def test_from_env_numeric_conversions(self):
         """Test numeric conversions from environment."""
         env_vars = {
             "AUTODOCS_MAX_RETRY_ATTEMPTS": "5",
@@ -235,7 +236,7 @@ class TestAutoDocsConfigValidation:
             "AUTODOCS_CIRCUIT_BREAKER_TIMEOUT": "120.0",
         }
 
-        with mocker.patch.dict(os.environ, env_vars, clear=False):
+        with patch.dict(os.environ, env_vars, clear=False):
             config = AutoDocsConfig.from_env()
             assert config.max_retry_attempts == 5
             assert config.base_retry_delay == 2.5
