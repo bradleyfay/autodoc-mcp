@@ -5,6 +5,22 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-08-09
+
+### Fixed
+- **README Documentation Accuracy**
+  - Corrected development command paths (removed incorrect `src.` prefix)
+  - Fixed MCP configuration examples with proper `autodocs-mcp` entry point
+  - Updated manual server startup commands for accurate troubleshooting
+  - Replaced outdated integration test examples with actual script commands
+
+### Changed
+- **Documentation Organization**
+  - Documented all 8 MCP tools including `health_check`, `ready_check`, and `get_metrics`
+  - Organized MCP tools into logical categories: Core Documentation, Cache Management, System Health & Monitoring
+  - Updated testing examples to reference actual `scripts/dev.py` commands
+  - Improved troubleshooting section with correct command examples
+
 ## [0.3.0] - 2025-08-09
 
 ### Added
