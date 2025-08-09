@@ -240,6 +240,78 @@ This project strictly follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 ## Claude Code Instructions
 
+### Technical Debt Management
+
+**MANDATORY**: All technical debt MUST be documented using disciplined tracking strategies:
+
+#### When to Log Technical Debt
+- **During Development**: When making compromises due to time constraints
+- **During Refactoring**: When identifying improvement opportunities
+- **During Code Review**: When spotting inconsistencies or anti-patterns
+- **During Bug Fixes**: When finding root causes that indicate deeper issues
+
+#### Technical Debt Documentation Requirements
+1. **Location**: Document in `planning/technical_debt.md`
+2. **Classification**: High/Medium/Low priority based on impact
+3. **Required Fields**: Description, Impact, Root Cause, Solution, Effort Estimate, Dependencies
+4. **Dating**: Always include creation date
+5. **Ownership**: Assign to specific areas (testing, infrastructure, code quality, etc.)
+
+#### Standard Technical Debt Categories
+- **Code Quality**: Inconsistent patterns, deprecated usage, code smells
+- **Testing Infrastructure**: Missing tests, inconsistent mocking, test reliability
+- **Documentation**: Missing or outdated docs, unclear APIs
+- **Infrastructure**: Build issues, deployment problems, environment inconsistencies
+- **Performance**: Known bottlenecks, scalability concerns
+- **Security**: Vulnerabilities, insecure patterns, missing validations
+
+#### Technical Debt Review Process
+- **Monthly Reviews**: Assess priority and status
+- **Before Major Releases**: Address high-priority items
+- **During Refactoring**: Target related debt items
+- **Completion Logging**: Move completed items to completion log
+
+### Third-Party Dependencies Philosophy
+
+**PRINCIPLE**: Lean heavily on widely-accepted third-party packages to build robust software. Do NOT reinvent the wheel.
+
+#### Dependency Guidelines
+1. **Favor Established Ecosystems**: Prefer packages from well-known ecosystems (pytest plugins, FastAPI ecosystem, etc.)
+2. **Quality Indicators**: Look for packages with:
+   - Active maintenance (recent commits/releases)
+   - Good documentation
+   - Strong community adoption
+   - Comprehensive test coverage
+   - Clear versioning/changelog
+3. **Testing Dependencies**: Be especially liberal with testing dependencies - they don't affect production
+4. **Development Dependencies**: Add tooling that improves developer experience without hesitation
+
+#### Pytest Plugin Philosophy
+The pytest ecosystem is mature and battle-tested. **Always prefer pytest plugins** over custom solutions:
+
+- **pytest-mock**: For all mocking needs (never use unittest.mock directly)
+- **pytest-asyncio**: For async test handling
+- **pytest-cov**: For coverage reporting
+- **pytest-xdist**: For parallel test execution
+- **pytest-timeout**: For test timeout management
+- **pytest-httpx**: For HTTP client mocking
+- **pytest-randomly**: For test order randomization
+- **pytest-sugar**: For better test output
+- **pytest-benchmark**: For performance testing
+
+#### When to Add Dependencies
+- **Testing Improvements**: Always acceptable
+- **Developer Experience**: Tools that speed up development
+- **Standard Patterns**: Libraries that implement well-established patterns
+- **Security**: Libraries that improve security posture
+- **Performance**: Well-maintained libraries that solve performance issues
+
+#### When to be Cautious
+- **Core Runtime Dependencies**: Evaluate carefully but don't avoid unnecessarily
+- **Bleeding Edge**: Avoid alpha/beta packages for core functionality
+- **Unmaintained**: Check maintenance status before adding
+- **License Conflicts**: Ensure license compatibility
+
 ### Mandatory Workflow Requirements
 
 When working in this repository, you MUST:
@@ -249,6 +321,7 @@ When working in this repository, you MUST:
 3. **Use release branches for deployment** - Only `release/v0.x.x` branches trigger PyPI deployment
 4. **Follow SemVer** - Version bumps must match the type of changes made
 5. **Update CHANGELOG.md with releases** - Add entries when creating release branches
+6. **Document technical debt** - Log any compromises or future improvements in `planning/technical_debt.md`
 
 ### Branch Management for Development
 
@@ -305,7 +378,55 @@ All commits automatically run:
 - File hygiene checks
 - YAML validation
 
-If pre-commit hooks fail, fix the issues and commit again.
+**CRITICAL RULE**: If pre-commit hooks fail, you MUST fix the issues and commit again.
+
+**STRICTLY FORBIDDEN**: Never use `git commit --no-verify` or `git commit -n` to bypass pre-commit hooks. This defeats the purpose of code quality enforcement and can introduce bugs, formatting inconsistencies, and security vulnerabilities.
+
+**Required Process**:
+1. Run `pre-commit run --all-files` to identify all issues
+2. Fix each identified issue properly in the code
+3. Commit normally with all hooks passing
+4. If you accidentally bypassed hooks, amend the commit with fixes immediately
+
+### Testing Standards and Consistency
+
+**MANDATORY**: All testing must follow consistent patterns and use pytest ecosystem tools:
+
+#### Mock Usage Standards
+- **ALWAYS use pytest-mock**: Import `mocker` fixture, never `from unittest.mock import`
+- **Use mock_services fixture**: For MCP tool tests, use the provided `mock_services` fixture from conftest.py
+- **Pattern**: `def test_something(self, mocker):` or `def test_something(self, mock_services, mocker):`
+- **No unittest.mock**: The following are **FORBIDDEN** in new code:
+  ```python
+  # FORBIDDEN
+  from unittest.mock import patch, AsyncMock, MagicMock
+  with patch("module.service") as mock:
+      pass
+
+  # CORRECT
+  def test_something(self, mocker):
+      mock_service = mocker.patch("module.service")
+      mock_async = mocker.AsyncMock()
+      mock_regular = mocker.MagicMock()
+  ```
+
+#### Test Fixture Usage
+- **Use mock_services**: For tests involving MCP tools (scan_dependencies, get_package_docs, etc.)
+- **Consistent Setup**: Don't duplicate service mocking when fixtures exist
+- **Proper Isolation**: Each test should be independent
+
+#### Testing Patterns
+- **Async Tests**: Always use `@pytest.mark.asyncio` for async test functions
+- **Error Testing**: Test both success and failure paths
+- **Mock Verification**: Verify mock calls when testing interactions
+- **Clear Assertions**: Use descriptive assertions with clear failure messages
+
+#### When Adding New Tests
+1. Check if existing fixtures can be reused
+2. Use pytest-mock patterns exclusively
+3. Follow the established naming conventions
+4. Include both positive and negative test cases
+5. Document any new fixtures in conftest.py
 
 ## Future Development
 

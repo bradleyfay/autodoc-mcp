@@ -3,7 +3,6 @@
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -18,7 +17,7 @@ class TestMCPTools:
     """Comprehensive MCP tool testing."""
 
     @pytest.mark.asyncio
-    async def test_scan_dependencies_success(self):
+    async def test_scan_dependencies_success(self, mocker):
         """Test successful dependency scanning."""
         # Setup mock parser response
         mock_result = ScanResult(
@@ -30,42 +29,45 @@ class TestMCPTools:
             failed_deps=[],
         )
 
-        mock_parser = AsyncMock()
-        mock_parser.parse_project = AsyncMock(return_value=mock_result)
+        # Use mocker instead of unittest.mock
+        mock_parser = mocker.AsyncMock()
+        mock_parser.parse_project = mocker.AsyncMock(return_value=mock_result)
+        mock_formatter = mocker.patch("autodocs_mcp.main.ResponseFormatter")
+        mock_validator = mocker.patch(
+            "autodocs_mcp.main.InputValidator.validate_project_path"
+        )
 
-        with (
-            patch("autodocs_mcp.main.parser", mock_parser),
-            patch("autodocs_mcp.main.ResponseFormatter") as mock_formatter,
-        ):
-            mock_formatter.format_scan_response.return_value = {
-                "success": True,
-                "dependency_count": 3,
-            }
+        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        mock_formatter.format_scan_response.return_value = {
+            "success": True,
+            "dependency_count": 3,
+        }
+        mock_validator.return_value = Path("/test/project")
 
-            # Import and call the function directly
-            from autodocs_mcp.main import scan_dependencies
+        # Import and call the function directly
+        from autodocs_mcp.main import scan_dependencies
 
-            result = await scan_dependencies.__wrapped__("/test/project")
+        result = await scan_dependencies.fn("/test/project")
 
-            assert result["success"] is True
-            assert result["dependency_count"] == 3
-            mock_parser.parse_project.assert_called_once()
+        assert result["success"] is True
+        assert result["dependency_count"] == 3
+        mock_parser.parse_project.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_scan_dependencies_parser_not_initialized(self):
+    async def test_scan_dependencies_parser_not_initialized(self, mocker):
         """Test scan_dependencies when parser is None."""
         from autodocs_mcp.main import scan_dependencies
 
-        with patch("autodocs_mcp.main.parser", None):
-            result = await scan_dependencies("/test/project")
+        mocker.patch("autodocs_mcp.main.parser", None)
+        result = await scan_dependencies.fn("/test/project")
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "service_not_initialized"
-            assert "Parser not initialized" in result["error"]["message"]
-            assert result["error"]["recoverable"] is False
+        assert result["success"] is False
+        assert result["error"]["code"] == "service_not_initialized"
+        assert "Parser not initialized" in result["error"]["message"]
+        assert result["error"]["recoverable"] is False
 
     @pytest.mark.asyncio
-    async def test_scan_dependencies_project_parsing_error(self, mock_services):
+    async def test_scan_dependencies_project_parsing_error(self, mock_services, mocker):
         """Test scan_dependencies with ProjectParsingError."""
         from autodocs_mcp.main import scan_dependencies
 
@@ -73,19 +75,25 @@ class TestMCPTools:
             "Invalid project", Path("/test")
         )
 
-        with patch("autodocs_mcp.main.ErrorFormatter") as mock_formatter:
-            mock_error = MagicMock()
-            mock_error.message = "Invalid project structure"
-            mock_error.suggestion = "Check pyproject.toml"
-            mock_error.severity.value = "critical"
-            mock_error.error_code = "project_parse_error"
-            mock_error.recoverable = False
-            mock_formatter.format_exception.return_value = mock_error
+        # Need to mock InputValidator as well
+        mocker.patch(
+            "autodocs_mcp.main.InputValidator.validate_project_path",
+            return_value=Path("/test/project"),
+        )
 
-            result = await scan_dependencies("/test/project")
+        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_error = mocker.MagicMock()
+        mock_error.message = "Invalid project structure"
+        mock_error.suggestion = "Check pyproject.toml"
+        mock_error.severity.value = "critical"
+        mock_error.error_code = "project_parse_error"
+        mock_error.recoverable = False
+        mock_formatter.format_exception.return_value = mock_error
 
-            assert result["success"] is False
-            assert "Invalid project structure" in result["error"]["message"]
+        result = await scan_dependencies.fn("/test/project")
+
+        assert result["success"] is False
+        assert "Invalid project structure" in result["error"]["message"]
 
     @pytest.mark.asyncio
     async def test_scan_dependencies_generic_error(self, mock_services):
@@ -103,7 +111,7 @@ class TestMCPTools:
             mock_error.recoverable = True
             mock_formatter.format_exception.return_value = mock_error
 
-            result = await scan_dependencies("/test/project")
+            result = await scan_dependencies.fn("/test/project")
 
             assert result["success"] is False
             assert result["error"]["code"] == "unexpected_error"
@@ -154,7 +162,7 @@ class TestMCPTools:
             mock_validator.validate_package_name.return_value = "requests"
             mock_validator.validate_version_constraint.return_value = ">=2.0.0"
 
-            result = await get_package_docs("requests", ">=2.0.0", None)
+            result = await get_package_docs.fn("requests", ">=2.0.0", None)
 
             assert result["success"] is True
             assert result["package_name"] == "requests"
@@ -207,7 +215,7 @@ class TestMCPTools:
 
             mock_validator.validate_package_name.return_value = "requests"
 
-            result = await get_package_docs("requests", None, None)
+            result = await get_package_docs.fn("requests", None, None)
 
             assert result["success"] is True
             assert result["from_cache"] is True
@@ -223,7 +231,7 @@ class TestMCPTools:
             patch("autodocs_mcp.main.cache_manager", None),
             patch("autodocs_mcp.main.version_resolver", None),
         ):
-            result = await get_package_docs("requests")
+            result = await get_package_docs.fn("requests")
 
             assert result["success"] is False
             assert result["error"]["code"] == "service_not_initialized"
@@ -250,7 +258,7 @@ class TestMCPTools:
             mock_error.recoverable = True
             mock_formatter.format_exception.return_value = mock_error
 
-            result = await get_package_docs("nonexistent")
+            result = await get_package_docs.fn("nonexistent")
 
             assert result["success"] is False
             assert result["error"]["code"] == "package_not_found"
@@ -282,7 +290,7 @@ class TestMCPTools:
         with patch("autodocs_mcp.main.InputValidator") as mock_validator:
             mock_validator.validate_package_name.return_value = "requests"
 
-            result = await get_package_docs_with_context("requests")
+            result = await get_package_docs_with_context.fn("requests")
 
             assert result["success"] is True
             assert result["context"]["primary_package"]["name"] == "requests"
@@ -294,7 +302,7 @@ class TestMCPTools:
         from autodocs_mcp.main import get_package_docs_with_context
 
         with patch("autodocs_mcp.main.context_fetcher", None):
-            result = await get_package_docs_with_context("requests")
+            result = await get_package_docs_with_context.fn("requests")
 
             assert result["success"] is False
             assert "Context fetcher not initialized" in result["error"]["message"]
@@ -313,7 +321,7 @@ class TestMCPTools:
         )
         mock_services["cache_manager"].invalidate = AsyncMock()
 
-        result = await refresh_cache()
+        result = await refresh_cache.fn()
 
         assert result["success"] is True
         assert result["cleared_entries"] == 5
@@ -326,7 +334,7 @@ class TestMCPTools:
         from autodocs_mcp.main import refresh_cache
 
         with patch("autodocs_mcp.main.cache_manager", None):
-            result = await refresh_cache()
+            result = await refresh_cache.fn()
 
             assert result["success"] is False
             assert result["error"]["code"] == "service_not_initialized"
@@ -350,7 +358,7 @@ class TestMCPTools:
             return_value=mock_packages
         )
 
-        result = await get_cache_stats()
+        result = await get_cache_stats.fn()
 
         assert result["success"] is True
         assert result["cache_stats"] == mock_stats
@@ -363,7 +371,7 @@ class TestMCPTools:
         from autodocs_mcp.main import get_cache_stats
 
         with patch("autodocs_mcp.main.cache_manager", None):
-            result = await get_cache_stats()
+            result = await get_cache_stats.fn()
 
             assert result["success"] is False
             assert result["error"]["code"] == "service_not_initialized"
@@ -386,7 +394,7 @@ class TestMCPTools:
             mock_error.recoverable = True
             mock_formatter.format_exception.return_value = mock_error
 
-            result = await get_cache_stats()
+            result = await get_cache_stats.fn()
 
             assert result["success"] is False
             assert result["error"]["code"] == "cache_stats_error"
