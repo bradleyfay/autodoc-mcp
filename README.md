@@ -46,7 +46,7 @@ uv sync --all-extras
 uv run pytest
 
 # Start development server
-uv run python -m src.autodocs_mcp.main
+uv run python -m autodocs_mcp.main
 ```
 
 ## 🔌 Usage
@@ -60,8 +60,7 @@ Add to your Cursor settings (`Cmd+,` → Extensions → Rules for AI → MCP Ser
 {
   "mcpServers": {
     "autodoc-mcp": {
-      "command": "uv",
-      "args": ["run", "--from", "autodoc-mcp", "autodocs-mcp"],
+      "command": "autodocs-mcp",
       "env": {
         "AUTODOCS_CACHE_DIR": "~/.autodocs/cache"
       }
@@ -107,7 +106,9 @@ Add to your claude_desktop_config.json:
 1. **Start the MCP server manually to test:**
    ```bash
    # Should show FastMCP startup screen
-   uv run --from autodoc-mcp autodocs-mcp
+   autodocs-mcp
+   # Or if installed via uv tool:
+   uv tool run autodoc-mcp autodocs-mcp
    ```
 
 2. **Test in your AI client:**
@@ -116,7 +117,11 @@ Add to your claude_desktop_config.json:
 
 ## 🛠️ Available MCP Tools
 
-### `scan_dependencies`
+The server provides **8 MCP tools** organized into three categories:
+
+### Core Documentation Tools
+
+#### `scan_dependencies`
 Scans project dependencies from pyproject.toml files with graceful error handling.
 
 **Parameters:**
@@ -208,18 +213,46 @@ Retrieves basic documentation for a single package without dependency context.
 
 **Note:** For rich context with dependencies, use `get_package_docs_with_context` instead.
 
-### `refresh_cache`
+### Cache Management Tools
+
+#### `refresh_cache`
 Clears the local documentation cache.
 
 **Returns:**
 - Statistics about cleared entries and freed space
 
-### `get_cache_stats`
+#### `get_cache_stats`
 Gets statistics about the documentation cache.
 
 **Returns:**
 - Cache statistics (total entries, size, hit rates)
 - List of cached packages
+
+### System Health & Monitoring Tools
+
+#### `health_check`
+Provides comprehensive system health status for monitoring and load balancer checks.
+
+**Returns:**
+- Overall health status of all system components
+- Component-level health information
+- System diagnostics
+
+#### `ready_check`
+Kubernetes-style readiness check for deployment orchestration.
+
+**Returns:**
+- Simple ready/not-ready status
+- Readiness for handling requests
+
+#### `get_metrics`
+Provides system performance metrics for monitoring.
+
+**Returns:**
+- Performance statistics and metrics
+- Health metrics
+- Request/response statistics
+- Cache performance data
 
 ## ⚙️ Configuration
 
@@ -279,25 +312,10 @@ uv run ruff check
 # Type checking
 uv run mypy src
 
-# Integration test with real packages
-uv run python -c "
-import asyncio
-from src.autodocs_mcp.main import initialize_services
-from src.autodocs_mcp.core.context_fetcher import create_context_fetcher
-from src.autodocs_mcp.core.cache_manager import FileCacheManager
-from pathlib import Path
-
-async def test():
-    await initialize_services()
-    cache_manager = FileCacheManager(Path.home() / '.autodocs' / 'cache')
-    await cache_manager.initialize()
-    context_fetcher = await create_context_fetcher(cache_manager)
-
-    context, metrics = await context_fetcher.fetch_package_context('fastapi')
-    print(f'FastAPI context: {len(context.runtime_dependencies)} deps, {context.token_estimate} tokens')
-
-asyncio.run(test())
-"
+# Development testing with scripts
+uv run python scripts/dev.py test-scan
+uv run python scripts/dev.py test-docs fastapi ">=0.100.0"
+uv run python scripts/dev.py cache-stats
 ```
 
 ## 🤔 Troubleshooting
@@ -322,7 +340,8 @@ asyncio.run(test())
 **MCP client can't connect:**
 - Verify the command path in your MCP configuration
 - Check if `autodoc-mcp` package is installed correctly
-- Test manual server startup: `uv run --from autodoc-mcp autodocs-mcp`
+- Test manual server startup: `autodocs-mcp`
+- If using uv tool install: `uv tool run autodoc-mcp autodocs-mcp`
 
 ### Debug Mode
 
@@ -331,10 +350,13 @@ asyncio.run(test())
 export AUTODOCS_LOG_LEVEL=DEBUG
 
 # Run server manually to see debug output
-uv run --from autodoc-mcp autodocs-mcp
+autodocs-mcp
 
 # Check cache contents
 ls ~/.autodocs/cache/
+
+# For development testing
+uv run python scripts/dev.py --help
 ```
 
 ## 🔮 Roadmap
