@@ -10,7 +10,6 @@ import tomlkit
 from structlog import get_logger
 from tomlkit.exceptions import TOMLKitError
 
-from ..exceptions import ProjectParsingError
 from ..models import DependencySpec, ScanResult
 
 logger = get_logger(__name__)
@@ -37,23 +36,70 @@ class PyProjectParser(DependencyParserInterface):
         """Parse pyproject.toml with graceful degradation."""
         pyproject_path = project_path / "pyproject.toml"
 
-        if not pyproject_path.exists():
-            raise ProjectParsingError(
-                f"pyproject.toml not found in {project_path}", file_path=pyproject_path
-            )
-
         dependencies = []
         failed_deps = []
-        warnings = []
+        warnings: list[str] = []
         errors: list[str] = []
 
+        # Handle missing pyproject.toml gracefully
+        if not pyproject_path.exists():
+            logger.warning(
+                "pyproject.toml not found, returning empty scan result",
+                project_path=str(project_path),
+            )
+            errors.append(f"pyproject.toml not found in {project_path}")
+            return ScanResult(
+                project_path=project_path,
+                dependencies=[],
+                project_name="unknown",
+                successful_deps=0,
+                failed_deps=[],
+                warnings=warnings,
+                errors=errors,
+                partial_success=True,
+                scan_timestamp=datetime.now(),
+            )
+
+        # Handle invalid TOML gracefully
         try:
             content = pyproject_path.read_text(encoding="utf-8")
             parsed = tomlkit.parse(content)
         except TOMLKitError as e:
-            raise ProjectParsingError(
-                f"Invalid TOML syntax: {e}", file_path=pyproject_path
-            ) from e
+            logger.warning(
+                "Invalid TOML syntax, returning empty scan result",
+                project_path=str(project_path),
+                error=str(e),
+            )
+            errors.append(f"Invalid TOML syntax: {e}")
+            return ScanResult(
+                project_path=project_path,
+                dependencies=[],
+                project_name="unknown",
+                successful_deps=0,
+                failed_deps=[],
+                warnings=warnings,
+                errors=errors,
+                partial_success=True,
+                scan_timestamp=datetime.now(),
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to read pyproject.toml, returning empty scan result",
+                project_path=str(project_path),
+                error=str(e),
+            )
+            errors.append(f"Failed to read pyproject.toml: {e}")
+            return ScanResult(
+                project_path=project_path,
+                dependencies=[],
+                project_name="unknown",
+                successful_deps=0,
+                failed_deps=[],
+                warnings=warnings,
+                errors=errors,
+                partial_success=True,
+                scan_timestamp=datetime.now(),
+            )
 
         # Parse main dependencies with error handling
         project_section = parsed.get("project", {})
@@ -122,17 +168,23 @@ class PyProjectParser(DependencyParserInterface):
     def _parse_dependency_list_safe(
         self, deps: list[str], source: str
     ) -> tuple[list[DependencySpec], list[dict[str, Any]]]:
-        """Parse dependency list with error collection."""
+        """Parse dependency list with enhanced error context."""
         parsed_deps = []
         failed_deps = []
 
-        for dep_str in deps:
+        for i, dep_str in enumerate(deps):
             try:
                 spec = self._parse_dependency_string(dep_str, source)
                 parsed_deps.append(spec)
             except ValueError as e:
                 failed_deps.append(
-                    {"dependency_string": dep_str, "error": str(e), "source": source}
+                    {
+                        "dependency_string": dep_str,
+                        "error": str(e),
+                        "source": source,
+                        "line_index": i,  # Add position info
+                        "raw_error": str(e),  # Preserve original error
+                    }
                 )
                 continue  # Keep processing other deps
 

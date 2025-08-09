@@ -1,17 +1,32 @@
 """Documentation fetching from PyPI API."""
 
 import asyncio
+import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any
 
-import httpx
 from structlog import get_logger
 
 from ..config import get_config
 from ..exceptions import NetworkError, PackageNotFoundError
 from ..models import PackageInfo
+from .error_formatter import ErrorFormatter, FormattedError
+from .network_resilience import NetworkResilientClient
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class DocFetchResult:
+    """Result of documentation fetching with error tracking."""
+
+    package_info: PackageInfo | None
+    success: bool
+    errors: list[FormattedError]
+    warnings: list[str]
+    from_cache: bool = False
+    fetch_time: float = 0.0
 
 
 class DocumentationFetcherInterface(ABC):
@@ -29,56 +44,155 @@ class DocumentationFetcherInterface(ABC):
 
 
 class PyPIDocumentationFetcher(DocumentationFetcherInterface):
-    """Fetches documentation from PyPI JSON API."""
+    """Enhanced fetcher with graceful degradation and error collection."""
 
     def __init__(self, semaphore: asyncio.Semaphore | None = None):
         self.config = get_config()
         self.semaphore = semaphore or asyncio.Semaphore(self.config.max_concurrent)
-        self._client: httpx.AsyncClient | None = None
+        self._resilient_client: NetworkResilientClient | None = None
+        self._error_formatter = ErrorFormatter()
 
     async def __aenter__(self) -> "PyPIDocumentationFetcher":
-        self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(self.config.request_timeout), follow_redirects=True
-        )
+        self._resilient_client = NetworkResilientClient()
+        await self._resilient_client.__aenter__()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        if self._client:
-            await self._client.aclose()
+        if self._resilient_client:
+            await self._resilient_client.__aexit__(exc_type, exc_val, exc_tb)
+
+    async def fetch_package_info_safe(self, package_name: str) -> DocFetchResult:
+        """Fetch package info with comprehensive error handling."""
+        start_time = time.time()
+        errors: list[FormattedError] = []
+        warnings: list[str] = []
+        package_info = None
+
+        async with self.semaphore:
+            try:
+                logger.debug("Fetching package documentation", package=package_name)
+
+                if self._resilient_client is None:
+                    raise RuntimeError(
+                        "Client not initialized. Use 'async with' context manager."
+                    )
+
+                response = await self._resilient_client.get_with_retry(
+                    f"{self.config.pypi_base_url}/{package_name}/json",
+                    headers={"Accept": "application/json"},
+                )
+
+                data = response.json()
+                package_info = self._parse_pypi_response(data, package_name)
+
+                logger.info(
+                    "Successfully fetched package info",
+                    package=package_name,
+                    version=package_info.version,
+                )
+
+            except PackageNotFoundError as e:
+                formatted_error = self._error_formatter.format_exception(
+                    e, {"package": package_name}
+                )
+                errors.append(formatted_error)
+                logger.warning("Package not found", package=package_name)
+
+            except NetworkError as e:
+                formatted_error = self._error_formatter.format_exception(
+                    e, {"package": package_name}
+                )
+                errors.append(formatted_error)
+                logger.error(
+                    "Network error fetching package", package=package_name, error=str(e)
+                )
+
+            except Exception as e:
+                formatted_error = self._error_formatter.format_exception(
+                    e, {"package": package_name, "operation": "documentation_fetch"}
+                )
+                errors.append(formatted_error)
+                logger.error(
+                    "Unexpected error fetching package",
+                    package=package_name,
+                    error=str(e),
+                )
+
+        fetch_time = time.time() - start_time
+
+        return DocFetchResult(
+            package_info=package_info,
+            success=package_info is not None,
+            errors=errors,
+            warnings=warnings,
+            fetch_time=fetch_time,
+        )
+
+    async def fetch_multiple_packages_safe(
+        self, package_names: list[str]
+    ) -> dict[str, DocFetchResult]:
+        """Fetch multiple packages with individual error handling."""
+        logger.info("Fetching multiple packages", count=len(package_names))
+
+        # Create tasks for concurrent fetching
+        tasks = [
+            self.fetch_package_info_safe(package_name) for package_name in package_names
+        ]
+
+        # Wait for all tasks, collecting results regardless of individual failures
+        results = await asyncio.gather(*tasks, return_exceptions=False)
+
+        # Create result mapping
+        fetch_results = {}
+        for package_name, result in zip(package_names, results, strict=False):
+            fetch_results[package_name] = result
+
+        successful = sum(1 for r in results if r.success)
+        failed = len(results) - successful
+
+        logger.info(
+            "Completed batch documentation fetch",
+            total=len(package_names),
+            successful=successful,
+            failed=failed,
+        )
+
+        return fetch_results
 
     async def fetch_package_info(self, package_name: str) -> PackageInfo:
-        """Fetch package information from PyPI JSON API."""
+        """Fetch package information from PyPI JSON API with network resilience."""
         async with self.semaphore:
             url = f"{self.config.pypi_base_url}/{package_name}/json"
 
             logger.info("Fetching package info", package=package_name, url=url)
 
-            if self._client is None:
+            if self._resilient_client is None:
                 raise RuntimeError(
                     "Client not initialized. Use 'async with' context manager."
                 )
 
             try:
-                response = await self._client.get(url)
-                response.raise_for_status()
+                response = await self._resilient_client.get_with_retry(
+                    url, headers={"Accept": "application/json"}
+                )
                 data = response.json()
 
-                return self._parse_pypi_response(data)
+                return self._parse_pypi_response(data, package_name)
 
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    raise PackageNotFoundError(
-                        f"Package '{package_name}' not found on PyPI"
-                    ) from e
-                raise NetworkError(f"PyPI API error: {e.response.status_code}") from e
-
-            except httpx.RequestError as e:
-                raise NetworkError(f"Network error fetching {package_name}: {e}") from e
+            except PackageNotFoundError:
+                logger.error("Package not found on PyPI", package=package_name)
+                raise
+            except NetworkError as e:
+                logger.error(
+                    "Network error fetching package", package=package_name, error=str(e)
+                )
+                raise
 
     def format_documentation(
         self, package_info: PackageInfo, query: str | None = None
     ) -> str:
         """Format package info for AI consumption with optional query filtering."""
+        config = get_config()
         sections = []
 
         # Basic info
@@ -90,11 +204,14 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         if package_info.author:
             sections.append(f"**Author**: {package_info.author}")
 
-        # Description (truncated if too long)
+        # Description with intelligent truncation
         if package_info.description:
             desc = package_info.description
-            if len(desc) > 2000:  # Truncate very long descriptions
-                desc = desc[:2000] + "..."
+            max_desc_size = min(
+                config.max_documentation_size // 2, 10000
+            )  # Reserve space for other content
+            if len(desc) > max_desc_size:
+                desc = desc[:max_desc_size] + "\n\n... (truncated for performance)"
             sections.append(f"## Description\n{desc}")
 
         # Project URLs
@@ -118,24 +235,47 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
         if query:
             formatted = self._apply_query_filter(formatted, query)
 
+        # Final size check and truncation
+        if len(formatted) > config.max_documentation_size:
+            truncated = formatted[: config.max_documentation_size]
+            # Try to truncate at a section boundary
+            last_section = truncated.rfind("\n\n##")
+            if last_section > config.max_documentation_size // 2:
+                truncated = truncated[:last_section]
+            formatted = truncated + "\n\n... (truncated for performance)"
+
         return formatted
 
-    def _parse_pypi_response(self, data: dict[str, Any]) -> PackageInfo:
-        """Parse PyPI JSON response into PackageInfo model."""
-        info = data.get("info", {})
+    def _parse_pypi_response(
+        self, data: dict[str, Any], package_name: str
+    ) -> PackageInfo:
+        """Parse PyPI response with validation."""
+        try:
+            info = data["info"]
 
-        return PackageInfo(
-            name=info.get("name", ""),
-            version=info.get("version", ""),
-            summary=info.get("summary"),
-            description=info.get("description"),
-            home_page=info.get("home_page"),
-            project_urls=info.get("project_urls", {}),
-            author=info.get("author"),
-            license=info.get("license"),
-            keywords=info.get("keywords", "").split() if info.get("keywords") else [],
-            classifiers=info.get("classifiers", []),
-        )
+            # Validate required fields
+            if not info.get("name"):
+                raise ValueError("Missing package name in PyPI response")
+            if not info.get("version"):
+                raise ValueError("Missing version in PyPI response")
+
+            return PackageInfo(
+                name=info["name"],
+                version=info["version"],
+                summary=info.get("summary") or "",
+                description=info.get("description") or "",
+                author=info.get("author"),
+                license=info.get("license"),
+                home_page=info.get("home_page"),
+                project_urls=info.get("project_urls") or {},
+                classifiers=info.get("classifiers") or [],
+                keywords=info.get("keywords", "").split()
+                if info.get("keywords")
+                else [],
+            )
+
+        except KeyError as e:
+            raise ValueError(f"Malformed PyPI response: missing key {e}") from e
 
     def _apply_query_filter(self, content: str, query: str) -> str:
         """Apply simple query-based filtering to content."""

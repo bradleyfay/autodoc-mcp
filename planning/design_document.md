@@ -60,7 +60,7 @@ class DependencyParserInterface(ABC):
     def parse_project(self, project_path: Path) -> List[DependencySpec]:
         """Parse project dependencies from pyproject.toml"""
         pass
-    
+
     @abstractmethod
     def validate_file(self, file_path: Path) -> bool:
         """Validate pyproject.toml file structure"""
@@ -90,7 +90,7 @@ class DocumentationFetcherInterface(ABC):
     async def fetch_package_info(self, package_name: str) -> PackageInfo:
         """Fetch package information from PyPI"""
         pass
-    
+
     @abstractmethod
     def format_documentation(self, package_info: PackageInfo, query: Optional[str] = None) -> str:
         """Format package info for AI consumption"""
@@ -115,12 +115,12 @@ class CacheManagerInterface(ABC):
     async def get(self, key: str) -> Optional[CacheEntry]:
         """Retrieve cached entry if valid"""
         pass
-    
+
     @abstractmethod
     async def set(self, key: str, data: PackageInfo) -> None:
         """Store entry in cache"""
         pass
-    
+
     @abstractmethod
     async def invalidate(self, key: Optional[str] = None) -> None:
         """Invalidate specific key or entire cache"""
@@ -140,10 +140,10 @@ Each MCP tool is implemented as a decorated function with clear input/output con
 async def scan_dependencies(project_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Scan project dependencies from pyproject.toml
-    
+
     Args:
         project_path: Path to project directory (defaults to current)
-        
+
     Returns:
         JSON with dependency specifications and metadata
     """
@@ -152,11 +152,11 @@ async def scan_dependencies(project_path: Optional[str] = None) -> Dict[str, Any
 async def get_package_docs(package_name: str, query: Optional[str] = None) -> Dict[str, Any]:
     """
     Retrieve formatted documentation for a package
-    
+
     Args:
         package_name: Name of the package
         query: Optional filter for specific documentation sections
-        
+
     Returns:
         Formatted documentation with metadata
     """
@@ -165,7 +165,7 @@ async def get_package_docs(package_name: str, query: Optional[str] = None) -> Di
 async def refresh_cache() -> Dict[str, Any]:
     """
     Refresh the local documentation cache
-    
+
     Returns:
         Statistics about cache refresh operation
     """
@@ -216,21 +216,21 @@ class CacheError(AutoDocsError):
 
 ### 4.1 Dependency Scanning Flow
 ```
-User Request → MCP Tool → DependencyParser → File Validation → 
+User Request → MCP Tool → DependencyParser → File Validation →
 Dependency Extraction → Response Formatting → MCP Response
 ```
 
 ### 4.2 Documentation Retrieval Flow
 ```
-User Request → MCP Tool → Cache Check → [Cache Miss] → 
-PyPI API Call → Rate Limiting → Response Processing → 
+User Request → MCP Tool → Cache Check → [Cache Miss] →
+PyPI API Call → Rate Limiting → Response Processing →
 Cache Storage → Documentation Formatting → MCP Response
 ```
 
 ### 4.3 Cache Refresh Flow
 ```
-User Request → MCP Tool → Cache Enumeration → 
-Batch PyPI Requests → Progress Tracking → 
+User Request → MCP Tool → Cache Enumeration →
+Batch PyPI Requests → Progress Tracking →
 Cache Updates → Statistics Collection → MCP Response
 ```
 
@@ -284,7 +284,7 @@ class AutoDocsConfig:
     max_concurrent: int
     request_timeout: int
     log_level: str
-    
+
     @classmethod
     def from_env(cls) -> 'AutoDocsConfig':
         """Load configuration from environment variables"""

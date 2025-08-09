@@ -140,7 +140,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-    
+
     steps:
     - uses: actions/checkout@v4
     - name: Install uv
@@ -197,16 +197,16 @@ from pathlib import Path
 class DependencySpec(BaseModel):
     """Represents a single dependency specification"""
     model_config = ConfigDict(frozen=True)
-    
+
     name: str = Field(..., min_length=1)
     version_constraint: Optional[str] = None
     extras: List[str] = Field(default_factory=list)
     source: str = Field(default="project")  # project, dev, build
-    
+
 class PackageInfo(BaseModel):
     """PyPI package information"""
     model_config = ConfigDict(frozen=True)
-    
+
     name: str
     version: str
     summary: Optional[str] = None
@@ -220,27 +220,27 @@ class PackageInfo(BaseModel):
 
 class DocumentationContext(BaseModel):
     """Complete documentation context for AI consumption"""
-    
+
     # Primary package (the one explicitly requested)
     primary_package: 'PackageDocumentation'
-    
-    # Direct dependencies (runtime dependencies) 
+
+    # Direct dependencies (runtime dependencies)
     runtime_dependencies: List['PackageDocumentation'] = Field(default_factory=list)
-    
+
     # Development dependencies (if relevant to query)
     dev_dependencies: List['PackageDocumentation'] = Field(default_factory=list)
-    
+
     # Context metadata
     context_scope: str  # "primary_only", "with_runtime", "with_dev"
     total_packages: int
     truncated_packages: List[str] = Field(default_factory=list)  # Packages skipped due to limits
-    
+
     @property
     def token_estimate(self) -> int:
         """Rough token count estimate for context window management"""
         return sum(doc.token_estimate for doc in self.all_packages)
-    
-    @property 
+
+    @property
     def all_packages(self) -> List['PackageDocumentation']:
         return [self.primary_package] + self.runtime_dependencies + self.dev_dependencies
 
@@ -249,18 +249,18 @@ class PackageDocumentation(BaseModel):
     name: str
     version: str
     relationship: str  # "primary", "runtime_dependency", "dev_dependency"
-    
+
     # Core documentation sections
     summary: Optional[str] = None
     key_features: List[str] = Field(default_factory=list)
-    main_classes: List[str] = Field(default_factory=list) 
+    main_classes: List[str] = Field(default_factory=list)
     main_functions: List[str] = Field(default_factory=list)
     usage_examples: Optional[str] = None
-    
+
     # Relationship context
     why_included: str  # "Requested package", "Required by fastapi", etc.
     dependency_level: int  # 0=primary, 1=direct dep, 2=transitive, etc.
-    
+
     @property
     def token_estimate(self) -> int:
         """Rough token count for this documentation"""
@@ -270,11 +270,11 @@ class PackageDocumentation(BaseModel):
 class CacheEntry(BaseModel):
     """Version-based cache entry (no time expiration)"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     data: PackageInfo
     timestamp: datetime  # For metadata only, not expiration
     version: str  # Exact version for cache key
-    
+
     # No is_expired property - version-based invalidation only
 
 class ScanResult(BaseModel):
@@ -283,7 +283,7 @@ class ScanResult(BaseModel):
     dependencies: List[DependencySpec]
     project_name: Optional[str] = None
     scan_timestamp: datetime
-    
+
     # Graceful degradation fields
     successful_deps: int = 0
     failed_deps: List[Dict[str, Any]] = Field(default_factory=list)
@@ -308,15 +308,15 @@ class AutoDocsConfig(BaseModel):
     request_timeout: int = Field(default=30)
     log_level: str = Field(default="INFO")
     pypi_base_url: str = Field(default="https://pypi.org/pypi")
-    
+
     # Version-based caching settings
     max_cached_versions_per_package: int = Field(default=3)
     cache_cleanup_days: int = Field(default=90)  # Remove unused packages after 90 days
-    
+
     # Context settings
     max_dependency_context: int = Field(default=8)
     max_context_tokens: int = Field(default=30000)
-    
+
     @classmethod
     def from_env(cls) -> 'AutoDocsConfig':
         """Load configuration from environment variables"""
@@ -331,7 +331,7 @@ class AutoDocsConfig(BaseModel):
             max_dependency_context=int(os.getenv("AUTODOCS_MAX_DEPS", str(cls.model_fields['max_dependency_context'].default))),
             max_context_tokens=int(os.getenv("AUTODOCS_MAX_TOKENS", str(cls.model_fields['max_context_tokens'].default))),
         )
-    
+
     def model_post_init(self, __context: Any) -> None:
         """Ensure cache directory exists"""
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -359,35 +359,35 @@ from ..exceptions import ProjectParsingError
 
 class DependencyParserInterface(ABC):
     """Interface for dependency parsing"""
-    
+
     @abstractmethod
     async def parse_project(self, project_path: Path) -> ScanResult:
         """Parse project dependencies from configuration files"""
-    
+
     @abstractmethod
     def validate_file(self, file_path: Path) -> bool:
         """Validate project configuration file"""
 
 class PyProjectParser(DependencyParserInterface):
     """Parser for pyproject.toml files"""
-    
+
     VERSION_PATTERN = re.compile(r'^([><=!~^]+)?([\d\w.-]+)$')
-    
+
     async def parse_project(self, project_path: Path) -> ScanResult:
         """Parse pyproject.toml with graceful degradation"""
         pyproject_path = project_path / "pyproject.toml"
-        
+
         if not pyproject_path.exists():
             raise ProjectParsingError(
                 f"pyproject.toml not found in {project_path}",
                 file_path=pyproject_path
             )
-        
+
         dependencies = []
         failed_deps = []
         warnings = []
         errors = []
-        
+
         try:
             content = pyproject_path.read_text(encoding='utf-8')
             parsed = tomlkit.parse(content)
@@ -396,18 +396,18 @@ class PyProjectParser(DependencyParserInterface):
                 f"Invalid TOML syntax: {e}",
                 file_path=pyproject_path
             ) from e
-        
+
         # Parse main dependencies with error handling
         project_section = parsed.get('project', {})
         project_name = project_section.get('name')
-        
+
         if 'dependencies' in project_section:
             deps, failed = self._parse_dependency_list_safe(
                 project_section['dependencies'], 'project'
             )
             dependencies.extend(deps)
             failed_deps.extend(failed)
-        
+
         # Parse optional dependencies with error handling
         optional_deps = project_section.get('optional-dependencies', {})
         for group_name, dep_list in optional_deps.items():
@@ -416,14 +416,14 @@ class PyProjectParser(DependencyParserInterface):
             )
             dependencies.extend(deps)
             failed_deps.extend(failed)
-        
+
         # Generate warnings for failed deps
         if failed_deps:
             warnings.extend([
                 f"Skipped malformed dependency: {f['dependency_string']}"
                 for f in failed_deps
             ])
-        
+
         return ScanResult(
             project_path=project_path,
             dependencies=dependencies,
@@ -435,7 +435,7 @@ class PyProjectParser(DependencyParserInterface):
             partial_success=len(failed_deps) > 0 or len(warnings) > 0,
             scan_timestamp=datetime.now()
         )
-    
+
     def validate_file(self, file_path: Path) -> bool:
         """Validate pyproject.toml structure"""
         try:
@@ -444,12 +444,12 @@ class PyProjectParser(DependencyParserInterface):
             return 'project' in parsed
         except (OSError, TOMLKitError):
             return False
-    
+
     def _parse_dependency_list_safe(self, deps: List[str], source: str) -> Tuple[List[DependencySpec], List[Dict[str, Any]]]:
         """Parse dependency list with error collection"""
         parsed_deps = []
         failed_deps = []
-        
+
         for dep_str in deps:
             try:
                 spec = self._parse_dependency_string(dep_str, source)
@@ -461,9 +461,9 @@ class PyProjectParser(DependencyParserInterface):
                     "source": source
                 })
                 continue  # Keep processing other deps
-        
+
         return parsed_deps, failed_deps
-    
+
     def _parse_dependency_string(self, dep_str: str, source: str) -> DependencySpec:
         """Parse a single dependency string like 'requests>=2.0.0[security]'"""
         # Handle extras
@@ -473,7 +473,7 @@ class PyProjectParser(DependencyParserInterface):
             extra_part = extra_part.rstrip(']')
             extras = [e.strip() for e in extra_part.split(',')]
             dep_str = name_part
-        
+
         # Handle version constraints
         version_constraint = None
         if any(op in dep_str for op in ['>=', '<=', '==', '!=', '~=', '>', '<']):
@@ -484,7 +484,7 @@ class PyProjectParser(DependencyParserInterface):
                     break
         else:
             name = dep_str.strip()
-        
+
         return DependencySpec(
             name=name,
             version_constraint=version_constraint,
@@ -510,101 +510,101 @@ logger = get_logger(__name__)
 
 class DocumentationFetcherInterface(ABC):
     """Interface for documentation fetching"""
-    
+
     @abstractmethod
     async def fetch_package_info(self, package_name: str) -> PackageInfo:
         """Fetch package information from external source"""
-    
+
     @abstractmethod
     def format_documentation(self, package_info: PackageInfo, query: Optional[str] = None) -> str:
         """Format package info for AI consumption"""
 
 class PyPIDocumentationFetcher(DocumentationFetcherInterface):
     """Fetches documentation from PyPI JSON API"""
-    
+
     def __init__(self, semaphore: Optional[asyncio.Semaphore] = None):
         self.config = get_config()
         self.semaphore = semaphore or asyncio.Semaphore(self.config.max_concurrent)
         self._client: Optional[httpx.AsyncClient] = None
-    
+
     async def __aenter__(self):
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(self.config.request_timeout),
             follow_redirects=True
         )
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self._client:
             await self._client.aclose()
-    
+
     async def fetch_package_info(self, package_name: str) -> PackageInfo:
         """Fetch package information from PyPI JSON API"""
         async with self.semaphore:
             url = f"{self.config.pypi_base_url}/{package_name}/json"
-            
+
             logger.info("Fetching package info", package=package_name, url=url)
-            
+
             try:
                 response = await self._client.get(url)
                 response.raise_for_status()
                 data = response.json()
-                
+
                 return self._parse_pypi_response(data)
-                
+
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 404:
                     raise PackageNotFoundError(f"Package '{package_name}' not found on PyPI")
                 raise NetworkError(f"PyPI API error: {e.response.status_code}")
-            
+
             except httpx.RequestError as e:
                 raise NetworkError(f"Network error fetching {package_name}: {e}")
-    
+
     def format_documentation(self, package_info: PackageInfo, query: Optional[str] = None) -> str:
         """Format package info for AI consumption with optional query filtering"""
         sections = []
-        
+
         # Basic info
         sections.append(f"# {package_info.name} v{package_info.version}")
-        
+
         if package_info.summary:
             sections.append(f"**Summary**: {package_info.summary}")
-        
+
         if package_info.author:
             sections.append(f"**Author**: {package_info.author}")
-        
+
         # Description (truncated if too long)
         if package_info.description:
             desc = package_info.description
             if len(desc) > 2000:  # Truncate very long descriptions
                 desc = desc[:2000] + "..."
             sections.append(f"## Description\n{desc}")
-        
+
         # Project URLs
         if package_info.project_urls:
             sections.append("## Links")
             for label, url in package_info.project_urls.items():
                 sections.append(f"- **{label}**: {url}")
-        
+
         if package_info.home_page:
             sections.append(f"- **Homepage**: {package_info.home_page}")
-        
+
         # Keywords and classifiers (if relevant to query)
         if package_info.keywords and (not query or any(kw in query.lower() for kw in package_info.keywords)):
             sections.append(f"**Keywords**: {', '.join(package_info.keywords)}")
-        
+
         formatted = "\n\n".join(sections)
-        
+
         # Apply query filtering if provided
         if query:
             formatted = self._apply_query_filter(formatted, query)
-        
+
         return formatted
-    
+
     def _parse_pypi_response(self, data: Dict[str, Any]) -> PackageInfo:
         """Parse PyPI JSON response into PackageInfo model"""
         info = data.get('info', {})
-        
+
         return PackageInfo(
             name=info.get('name', ''),
             version=info.get('version', ''),
@@ -617,25 +617,25 @@ class PyPIDocumentationFetcher(DocumentationFetcherInterface):
             keywords=info.get('keywords', '').split() if info.get('keywords') else [],
             classifiers=info.get('classifiers', [])
         )
-    
+
     def _apply_query_filter(self, content: str, query: str) -> str:
         """Apply simple query-based filtering to content"""
         query_terms = query.lower().split()
-        
+
         # Split content into sections and score by relevance
         sections = content.split('\n\n')
         relevant_sections = []
-        
+
         for section in sections:
             section_lower = section.lower()
             score = sum(1 for term in query_terms if term in section_lower)
-            
+
             if score > 0:
                 relevant_sections.append((score, section))
-        
+
         # Sort by relevance and return top sections
         relevant_sections.sort(key=lambda x: x[0], reverse=True)
-        
+
         return '\n\n'.join([section for _, section in relevant_sections[:5]])
 ```
 
@@ -655,21 +655,21 @@ logger = get_logger(__name__)
 
 class VersionResolver:
     """Resolve version constraints to specific versions"""
-    
+
     @staticmethod
     async def resolve_version(package_name: str, constraint: Optional[str] = None) -> str:
         """
         Resolve version constraint to specific version
-        
+
         Args:
             package_name: Package to resolve
             constraint: Version constraint like ">=2.0.0" or None for latest
-            
+
         Returns:
             Specific version string like "2.28.2"
         """
         config = get_config()
-        
+
         async with httpx.AsyncClient(timeout=httpx.Timeout(config.request_timeout)) as client:
             try:
                 response = await client.get(f"{config.pypi_base_url}/{package_name}/json")
@@ -681,12 +681,12 @@ class VersionResolver:
                 raise NetworkError(f"PyPI API error: {e.response.status_code}")
             except httpx.RequestError as e:
                 raise NetworkError(f"Network error resolving {package_name}: {e}")
-        
+
         latest_version = data["info"]["version"]
-        
+
         if constraint is None:
             return latest_version
-        
+
         # Parse and validate constraint
         try:
             specifier = SpecifierSet(constraint)
@@ -697,10 +697,10 @@ class VersionResolver:
                 # Future: implement full version resolution from all releases
                 raise ValueError(f"Latest version {latest_version} doesn't satisfy constraint {constraint}")
         except Exception as e:
-            logger.warning("Version constraint parsing failed", 
+            logger.warning("Version constraint parsing failed",
                           package=package_name, constraint=constraint, error=str(e))
             return latest_version  # Fallback to latest
-    
+
     @staticmethod
     def generate_cache_key(package_name: str, version: str) -> str:
         """Generate cache key for specific version"""
@@ -719,7 +719,7 @@ logger = get_logger(__name__)
 
 # Pre-defined package categories for relevance scoring
 CORE_FRAMEWORKS = {
-    "pydantic", "fastapi", "django", "flask", "requests", "httpx", 
+    "pydantic", "fastapi", "django", "flask", "requests", "httpx",
     "sqlalchemy", "pandas", "numpy", "click", "typer"
 }
 
@@ -734,39 +734,39 @@ LOW_PRIORITY_DEPS = {
 }
 
 WELL_DOCUMENTED = {
-    "requests", "pydantic", "fastapi", "click", "typer", "rich", 
+    "requests", "pydantic", "fastapi", "click", "typer", "rich",
     "pandas", "numpy", "sqlalchemy", "jinja2", "pytest"
 }
 
 class DependencyResolver:
     """Resolve package dependencies with intelligent context scoping"""
-    
+
     def __init__(self, cache_manager: FileCacheManager):
         self.cache_manager = cache_manager
-    
+
     async def resolve_context_dependencies(
-        self, 
-        package_name: str, 
+        self,
+        package_name: str,
         version: str,
         max_dependencies: int = 8,
         max_tokens: int = 30000
     ) -> List[str]:
         """
         Resolve which dependencies to include in context
-        
+
         Args:
             package_name: Primary package
-            version: Specific version 
+            version: Specific version
             max_dependencies: Maximum number of deps to include
             max_tokens: Token budget for dependency context
-            
+
         Returns:
             List of dependency package names to fetch
         """
         try:
             # Get dependency metadata from PyPI (simplified for MVP)
             deps_metadata = await self._get_dependency_metadata(package_name, version)
-            
+
             # Score dependencies by relevance
             scored_deps = []
             for dep_name in deps_metadata.get('requires_dist', []):
@@ -775,41 +775,41 @@ class DependencyResolver:
                 if dep_name_clean:
                     score = self._calculate_dependency_relevance(dep_name_clean, package_name)
                     scored_deps.append((score, dep_name_clean))
-            
+
             # Sort by relevance and apply limits
             scored_deps.sort(reverse=True, key=lambda x: x[0])  # Highest score first
-            
+
             selected_deps = []
             for score, dep_name in scored_deps:
                 if len(selected_deps) >= max_dependencies:
                     break
                 if score > 0:  # Only include positively scored deps
                     selected_deps.append(dep_name)
-            
-            logger.info("Resolved context dependencies", 
-                       package=package_name, 
+
+            logger.info("Resolved context dependencies",
+                       package=package_name,
                        selected_count=len(selected_deps),
                        total_available=len(scored_deps))
-            
+
             return selected_deps
-            
+
         except Exception as e:
-            logger.warning("Dependency context resolution failed", 
+            logger.warning("Dependency context resolution failed",
                           package=package_name, error=str(e))
             return []  # Return empty list on failure
-    
+
     def _calculate_dependency_relevance(self, dep_name: str, primary_package: str) -> float:
         """Score dependency relevance for context inclusion"""
         score = 0.0
-        
+
         # Core framework dependencies get high priority
         if dep_name in CORE_FRAMEWORKS:
             score += 10.0
-        
+
         # Common utility libraries
         if dep_name in COMMON_UTILITIES:
             score += 5.0
-        
+
         # Package-specific boost for known important relationships
         package_boosts = {
             "fastapi": {"pydantic": 8.0, "starlette": 8.0, "uvicorn": 6.0},
@@ -817,20 +817,20 @@ class DependencyResolver:
             "flask": {"jinja2": 7.0, "werkzeug": 7.0},
             "requests": {"urllib3": 8.0, "certifi": 6.0}
         }
-        
+
         if primary_package in package_boosts:
             score += package_boosts[primary_package].get(dep_name, 0.0)
-        
+
         # Penalty for very low-level or build dependencies
         if dep_name in LOW_PRIORITY_DEPS:
             score -= 5.0
-        
+
         # Boost for packages with good documentation
         if dep_name in WELL_DOCUMENTED:
             score += 2.0
-            
+
         return max(0.0, score)  # Don't go negative
-    
+
     async def _get_dependency_metadata(self, package_name: str, version: str) -> Dict[str, Any]:
         """Get dependency metadata from PyPI (simplified version)"""
         # For MVP: return basic metadata structure
@@ -884,19 +884,19 @@ dependency_resolver: DependencyResolver = None
 async def scan_dependencies(project_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Scan project dependencies from pyproject.toml
-    
+
     Args:
         project_path: Path to project directory (defaults to current directory)
-        
+
     Returns:
         JSON with dependency specifications and project metadata
     """
     try:
         path = Path(project_path) if project_path else Path.cwd()
         logger.info("Scanning dependencies", project_path=str(path))
-        
+
         result = await parser.parse_project(path)
-        
+
         return {
             "success": True,
             "partial_success": result.partial_success,
@@ -918,7 +918,7 @@ async def scan_dependencies(project_path: Optional[str] = None) -> Dict[str, Any
             "warnings": result.warnings,
             "errors": result.errors
         }
-        
+
     except AutoDocsError as e:
         logger.error("Dependency scanning failed", error=str(e))
         return {
@@ -931,53 +931,53 @@ async def scan_dependencies(project_path: Optional[str] = None) -> Dict[str, Any
 
 @mcp.tool
 async def get_package_docs_with_context(
-    package_name: str, 
+    package_name: str,
     version_constraint: Optional[str] = None,
     include_dependencies: bool = True,
     query: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Retrieve comprehensive documentation context including dependencies
-    
+
     Args:
         package_name: Name of the package to fetch documentation for
         version_constraint: Version constraint from dependency scanning
         include_dependencies: Whether to include dependency context
         query: Optional query to filter documentation sections
-        
+
     Returns:
         Rich documentation context with primary package and dependencies
     """
     try:
-        logger.info("Fetching package docs with context", 
-                   package=package_name, 
+        logger.info("Fetching package docs with context",
+                   package=package_name,
                    constraint=version_constraint,
                    include_deps=include_dependencies,
                    query=query)
-        
+
         # Step 1: Resolve to specific version
         resolved_version = await version_resolver.resolve_version(package_name, version_constraint)
-        
+
         # Step 2: Check version-specific cache
         cache_key = version_resolver.generate_cache_key(package_name, resolved_version)
         cached_entry = await cache_manager.get(cache_key)
-        
+
         if cached_entry:
-            logger.info("Version-specific cache hit", 
-                       package=package_name, 
+            logger.info("Version-specific cache hit",
+                       package=package_name,
                        version=resolved_version)
             primary_info = cached_entry.data
             from_cache = True
         else:
-            logger.info("Fetching fresh package info", 
-                       package=package_name, 
+            logger.info("Fetching fresh package info",
+                       package=package_name,
                        version=resolved_version)
-            
+
             async with PyPIDocumentationFetcher() as fetcher:
                 primary_info = await fetcher.fetch_package_info(package_name)
                 await cache_manager.set(cache_key, primary_info)
             from_cache = False
-        
+
         # Step 3: Build documentation context
         context = {
             "primary_package": {
@@ -994,7 +994,7 @@ async def get_package_docs_with_context(
             "total_packages": 1,
             "from_cache": from_cache
         }
-        
+
         # Step 4: Add dependency context if requested
         if include_dependencies:
             try:
@@ -1003,24 +1003,24 @@ async def get_package_docs_with_context(
                     version=primary_info.version,
                     max_dependencies=8
                 )
-                
+
                 if dependency_names:
                     dependency_docs = await _fetch_dependency_documentation_batch(
                         dependency_names, primary_info.name
                     )
-                    
+
                     context["dependencies"] = dependency_docs["successful"]
                     context["context_scope"] = f"with_runtime ({len(dependency_docs['successful'])} deps)"
                     context["total_packages"] = 1 + len(dependency_docs["successful"])
-                    
+
                     if dependency_docs["failed"]:
                         context["dependency_errors"] = dependency_docs["failed"]
-            
+
             except Exception as e:
                 logger.warning("Dependency context failed", error=str(e))
                 context["context_scope"] = "primary_only (deps_failed)"
                 context["dependency_error"] = str(e)
-        
+
         return {
             "success": True,
             "context": context,
@@ -1030,7 +1030,7 @@ async def get_package_docs_with_context(
                 "dependency_count": len(context.get("dependencies", []))
             }
         }
-        
+
     except Exception as e:
         logger.error("Documentation fetch failed", package=package_name, error=str(e))
         return {
@@ -1046,11 +1046,11 @@ async def get_package_docs_with_context(
 async def get_package_docs(package_name: str, query: Optional[str] = None) -> Dict[str, Any]:
     """
     Simple package documentation fetch (backward compatibility)
-    
+
     Args:
         package_name: Name of package
         query: Optional query filter
-        
+
     Returns:
         Basic package documentation
     """
@@ -1059,7 +1059,7 @@ async def get_package_docs(package_name: str, query: Optional[str] = None) -> Di
         include_dependencies=False,
         query=query
     )
-    
+
     if result["success"]:
         primary = result["context"]["primary_package"]
         return {
@@ -1081,15 +1081,15 @@ async def _format_primary_documentation(package_info: PackageInfo, query: Option
 async def _fetch_dependency_documentation_batch(dependency_names: List[str], primary_package: str) -> Dict[str, List]:
     """Fetch documentation for multiple dependencies concurrently"""
     tasks = [
-        _fetch_single_dependency_docs(dep_name, primary_package) 
+        _fetch_single_dependency_docs(dep_name, primary_package)
         for dep_name in dependency_names
     ]
-    
+
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     successful = []
     failed = []
-    
+
     for i, result in enumerate(results):
         if isinstance(result, Exception):
             failed.append({
@@ -1098,7 +1098,7 @@ async def _fetch_dependency_documentation_batch(dependency_names: List[str], pri
             })
         else:
             successful.append(result)
-    
+
     return {"successful": successful, "failed": failed}
 
 async def _fetch_single_dependency_docs(dep_name: str, primary_package: str) -> Dict[str, Any]:
@@ -1106,7 +1106,7 @@ async def _fetch_single_dependency_docs(dep_name: str, primary_package: str) -> 
     try:
         resolved_version = await version_resolver.resolve_version(dep_name)
         cache_key = version_resolver.generate_cache_key(dep_name, resolved_version)
-        
+
         cached_entry = await cache_manager.get(cache_key)
         if cached_entry:
             dep_info = cached_entry.data
@@ -1114,11 +1114,11 @@ async def _fetch_single_dependency_docs(dep_name: str, primary_package: str) -> 
             async with PyPIDocumentationFetcher() as fetcher:
                 dep_info = await fetcher.fetch_package_info(dep_name)
                 await cache_manager.set(cache_key, dep_info)
-        
+
         # Format concise documentation for context
         async with PyPIDocumentationFetcher() as fetcher:
             formatted_docs = fetcher.format_documentation(dep_info, truncate=True)
-        
+
         return {
             "name": dep_info.name,
             "version": dep_info.version,
@@ -1127,25 +1127,25 @@ async def _fetch_single_dependency_docs(dep_name: str, primary_package: str) -> 
             "summary": dep_info.summary,
             "documentation": formatted_docs[:1000] + "..." if len(formatted_docs) > 1000 else formatted_docs
         }
-        
+
     except Exception as e:
         raise Exception(f"Failed to fetch docs for {dep_name}: {e}")
 
-@mcp.tool  
+@mcp.tool
 async def refresh_cache() -> Dict[str, Any]:
     """
     Refresh the local documentation cache
-    
+
     Returns:
         Statistics about cache refresh operation
     """
     try:
         logger.info("Starting cache refresh")
-        
+
         stats = await cache_manager.refresh_all()
-        
+
         logger.info("Cache refresh completed", **stats)
-        
+
         return {
             "success": True,
             "refreshed_packages": stats["refreshed_count"],
@@ -1153,7 +1153,7 @@ async def refresh_cache() -> Dict[str, Any]:
             "total_time_seconds": stats["duration"],
             "errors": stats["errors"]
         }
-        
+
     except AutoDocsError as e:
         logger.error("Cache refresh failed", error=str(e))
         return {
@@ -1167,15 +1167,15 @@ async def refresh_cache() -> Dict[str, Any]:
 async def initialize_services():
     """Initialize global services with new components"""
     global parser, cache_manager, version_resolver, dependency_resolver
-    
+
     config = get_config()
     logger.info("Initializing services", config=config.model_dump())
-    
+
     parser = PyProjectParser()
     cache_manager = FileCacheManager(config.cache_dir)
     version_resolver = VersionResolver()
     dependency_resolver = DependencyResolver(cache_manager)
-    
+
     await cache_manager.initialize()
 
 def main():
@@ -1183,10 +1183,10 @@ def main():
     try:
         # Initialize services
         asyncio.run(initialize_services())
-        
+
         # Run the server
         mcp.run()
-        
+
     except KeyboardInterrupt:
         logger.info("Server shutdown requested")
     except Exception as e:
@@ -1208,11 +1208,11 @@ from autodocs_mcp.core.dependency_parser import PyProjectParser
 from autodocs_mcp.exceptions import ProjectParsingError
 
 class TestPyProjectParser:
-    
+
     @pytest.fixture
     def parser(self):
         return PyProjectParser()
-    
+
     @pytest.fixture
     def sample_pyproject(self, tmp_path):
         content = '''
@@ -1230,31 +1230,31 @@ dev = ["pytest>=7.0.0", "ruff"]
         pyproject_path = tmp_path / "pyproject.toml"
         pyproject_path.write_text(content)
         return tmp_path
-    
+
     async def test_parse_valid_project(self, parser, sample_pyproject):
         result = await parser.parse_project(sample_pyproject)
-        
+
         assert result.project_name == "test-project"
         assert len(result.dependencies) == 5  # 3 main + 2 dev
-        
+
         # Check main dependencies
         main_deps = [d for d in result.dependencies if d.source == "project"]
         assert len(main_deps) == 3
-        
+
         requests_dep = next(d for d in main_deps if d.name == "requests")
         assert requests_dep.version_constraint == ">=2.0.0"
-        
+
         pydantic_dep = next(d for d in main_deps if d.name == "pydantic")
         assert pydantic_dep.extras == ["email"]
-    
+
     async def test_parse_missing_file(self, parser, tmp_path):
         with pytest.raises(ProjectParsingError, match="not found"):
             await parser.parse_project(tmp_path)
-    
+
     async def test_parse_invalid_toml(self, parser, tmp_path):
         invalid_path = tmp_path / "pyproject.toml"
         invalid_path.write_text("invalid toml [content")
-        
+
         with pytest.raises(ProjectParsingError, match="Invalid TOML"):
             await parser.parse_project(tmp_path)
 ```
@@ -1267,17 +1267,17 @@ from unittest.mock import AsyncMock, patch
 from autodocs_mcp.main import scan_dependencies, get_package_docs
 
 class TestMCPTools:
-    
+
     @pytest.fixture
     def mock_parser(self):
         with patch('autodocs_mcp.main.parser') as mock:
             yield mock
-    
-    @pytest.fixture  
+
+    @pytest.fixture
     def mock_cache(self):
         with patch('autodocs_mcp.main.cache_manager') as mock:
             yield mock
-    
+
     async def test_scan_dependencies_success(self, mock_parser, tmp_path):
         # Setup mock response
         mock_result = Mock()
@@ -1285,28 +1285,28 @@ class TestMCPTools:
         mock_result.dependencies = []
         mock_result.scan_timestamp = datetime.now()
         mock_result.errors = []
-        
+
         mock_parser.parse_project.return_value = mock_result
-        
+
         # Execute
         result = await scan_dependencies(str(tmp_path))
-        
+
         # Verify
         assert result["success"] is True
         assert result["project_name"] == "test-project"
         mock_parser.parse_project.assert_called_once()
-    
+
     async def test_get_package_docs_cache_hit(self, mock_cache):
         # Setup cache hit
         mock_entry = Mock()
         mock_entry.is_expired = False
         mock_entry.data = Mock(name="requests", version="2.28.0")
         mock_cache.get.return_value = mock_entry
-        
+
         # Execute
         with patch('autodocs_mcp.main.PyPIDocumentationFetcher'):
             result = await get_package_docs("requests")
-        
+
         # Verify
         assert result["success"] is True
         assert result["cached"] is True
@@ -1339,7 +1339,7 @@ def test_scan(project_path):
     async def run_test():
         result = await scan_dependencies(project_path)
         click.echo(json.dumps(result, indent=2))
-    
+
     asyncio.run(run_test())
 
 @cli.command()
@@ -1350,7 +1350,7 @@ def test_docs(package_name, query):
     async def run_test():
         result = await get_package_docs(package_name, query)
         click.echo(json.dumps(result, indent=2))
-    
+
     asyncio.run(run_test())
 
 if __name__ == '__main__':
@@ -1365,29 +1365,29 @@ import time
 from autodocs_mcp.main import scan_dependencies, get_package_docs
 
 class TestPerformance:
-    
+
     @pytest.mark.asyncio
     async def test_scan_performance(self, large_project_fixture):
         """Test that scanning completes within performance target"""
         start_time = time.time()
-        
+
         result = await scan_dependencies(str(large_project_fixture))
-        
+
         duration = time.time() - start_time
         assert duration < 5.0  # Must complete within 5 seconds
         assert result["success"] is True
         assert result["total_dependencies"] >= 5
-    
+
     @pytest.mark.asyncio
     async def test_batch_doc_fetching(self):
         """Test concurrent documentation fetching performance"""
         packages = ["requests", "pydantic", "click", "httpx", "structlog"]
-        
+
         start_time = time.time()
-        
+
         tasks = [get_package_docs(pkg) for pkg in packages]
         results = await asyncio.gather(*tasks)
-        
+
         duration = time.time() - start_time
         assert duration < 10.0  # Batch fetch within 10 seconds
         assert all(r["success"] for r in results)

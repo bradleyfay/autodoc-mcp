@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autodoc-mcp"
-version = "0.1.6"
+version = "0.3.0"
 description = "MCP server for automatic Python package documentation context"
 authors = [{name = "AutoDocs Team", email = "team@autodocs.dev"}]
 license = {text = "MIT"}
@@ -27,6 +27,10 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.11.0",
     "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.3.0",  # Parallel test execution
+    "pytest-timeout>=2.1.0",  # Test timeout handling
+    "pytest-httpx>=0.30.0",  # HTTP request mocking for httpx
+    "pytest-randomly>=3.12.0",  # Randomize test order
     "ruff>=0.1.0",
     "mypy>=1.6.0",
     "pre-commit>=3.5.0",
