@@ -204,11 +204,9 @@ class TestCacheManagement:
         await cache_manager.set(cache_key, sample_package_info)
 
         # Mock unlink to raise OSError
-        with mocker.patch.object(
-            Path, "unlink", side_effect=OSError("Permission denied")
-        ):
-            # Should not raise error, just log warning
-            await cache_manager.invalidate(cache_key)
+        mocker.patch.object(Path, "unlink", side_effect=OSError("Permission denied"))
+        # Should not raise error, just log warning
+        await cache_manager.invalidate(cache_key)
 
     @pytest.mark.asyncio
     async def test_invalidate_entire_cache(self, cache_manager, sample_package_info):
@@ -234,10 +232,8 @@ class TestCacheManagement:
         await cache_manager.set("test-key", sample_package_info)
 
         # Mock glob to raise OSError
-        with (
-            mocker.patch.object(Path, "glob", side_effect=OSError("Permission denied")),
-            pytest.raises(CacheError, match="Failed to clear cache"),
-        ):
+        mocker.patch.object(Path, "glob", side_effect=OSError("Permission denied"))
+        with pytest.raises(CacheError, match="Failed to clear cache"):
             await cache_manager.invalidate()
 
     @pytest.mark.asyncio
@@ -392,17 +388,17 @@ class TestResolveAndCache:
         cache_key = "requests-2.28.0"
         await cache_manager.set(cache_key, sample_package_info)
 
-        with mocker.patch(
+        mock_resolver_class = mocker.patch(
             "src.autodocs_mcp.core.version_resolver.VersionResolver"
-        ) as mock_resolver_class:
-            mock_resolver = mocker.Mock()
-            mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
-            mock_resolver.generate_cache_key.return_value = cache_key
-            mock_resolver_class.return_value = mock_resolver
+        )
+        mock_resolver = mocker.Mock()
+        mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
+        mock_resolver.generate_cache_key.return_value = cache_key
+        mock_resolver_class.return_value = mock_resolver
 
-            result, from_cache = await cache_manager.resolve_and_cache(
-                "requests", ">=2.0.0"
-            )
+        result, from_cache = await cache_manager.resolve_and_cache(
+            "requests", ">=2.0.0"
+        )
 
         assert from_cache is True
         assert result["name"] == "requests"
@@ -415,32 +411,30 @@ class TestResolveAndCache:
         """Test resolve and cache with cache miss and fresh fetch."""
         cache_key = "requests-2.28.0"
 
-        with (
-            mocker.patch(
-                "src.autodocs_mcp.core.version_resolver.VersionResolver"
-            ) as mock_resolver_class,
-            mocker.patch(
-                "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
-            ) as mock_fetcher_class,
-        ):
-            # Mock version resolver
-            mock_resolver = mocker.Mock()
-            mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
-            mock_resolver.generate_cache_key.return_value = cache_key
-            mock_resolver_class.return_value = mock_resolver
+        # Mock version resolver
+        mock_resolver_class = mocker.patch(
+            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+        )
+        mock_resolver = mocker.Mock()
+        mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
+        mock_resolver.generate_cache_key.return_value = cache_key
+        mock_resolver_class.return_value = mock_resolver
 
-            # Mock fetcher
-            mock_fetcher = mocker.AsyncMock()
-            mock_fetcher.fetch_package_info = mocker.AsyncMock(
-                return_value=sample_package_info
-            )
-            mock_fetcher.__aenter__ = mocker.AsyncMock(return_value=mock_fetcher)
-            mock_fetcher.__aexit__ = mocker.AsyncMock(return_value=None)
-            mock_fetcher_class.return_value = mock_fetcher
+        # Mock fetcher
+        mock_fetcher_class = mocker.patch(
+            "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
+        )
+        mock_fetcher = mocker.AsyncMock()
+        mock_fetcher.fetch_package_info = mocker.AsyncMock(
+            return_value=sample_package_info
+        )
+        mock_fetcher.__aenter__ = mocker.AsyncMock(return_value=mock_fetcher)
+        mock_fetcher.__aexit__ = mocker.AsyncMock(return_value=None)
+        mock_fetcher_class.return_value = mock_fetcher
 
-            result, from_cache = await cache_manager.resolve_and_cache(
-                "requests", ">=2.0.0"
-            )
+        result, from_cache = await cache_manager.resolve_and_cache(
+            "requests", ">=2.0.0"
+        )
 
         assert from_cache is False
         assert result["name"] == "requests"
@@ -455,48 +449,46 @@ class TestResolveAndCache:
         self, cache_manager, mocker
     ):
         """Test resolve and cache with version resolution error."""
-        with mocker.patch(
+        mock_resolver_class = mocker.patch(
             "src.autodocs_mcp.core.version_resolver.VersionResolver"
-        ) as mock_resolver_class:
-            mock_resolver = mocker.Mock()
-            mock_resolver.resolve_version = mocker.AsyncMock(
-                side_effect=ValueError("Version resolution failed")
-            )
-            mock_resolver_class.return_value = mock_resolver
+        )
+        mock_resolver = mocker.Mock()
+        mock_resolver.resolve_version = mocker.AsyncMock(
+            side_effect=ValueError("Version resolution failed")
+        )
+        mock_resolver_class.return_value = mock_resolver
 
-            with pytest.raises(ValueError, match="Version resolution failed"):
-                await cache_manager.resolve_and_cache("nonexistent-package", ">=1.0.0")
+        with pytest.raises(ValueError, match="Version resolution failed"):
+            await cache_manager.resolve_and_cache("nonexistent-package", ">=1.0.0")
 
     @pytest.mark.asyncio
     async def test_resolve_and_cache_fetch_error(self, cache_manager, mocker):
         """Test resolve and cache with fetch error."""
         cache_key = "requests-2.28.0"
 
-        with (
-            mocker.patch(
-                "src.autodocs_mcp.core.version_resolver.VersionResolver"
-            ) as mock_resolver_class,
-            mocker.patch(
-                "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
-            ) as mock_fetcher_class,
-        ):
-            # Mock version resolver
-            mock_resolver = mocker.Mock()
-            mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
-            mock_resolver.generate_cache_key.return_value = cache_key
-            mock_resolver_class.return_value = mock_resolver
+        # Mock version resolver
+        mock_resolver_class = mocker.patch(
+            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+        )
+        mock_resolver = mocker.Mock()
+        mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
+        mock_resolver.generate_cache_key.return_value = cache_key
+        mock_resolver_class.return_value = mock_resolver
 
-            # Mock fetcher to raise error
-            mock_fetcher = mocker.AsyncMock()
-            mock_fetcher.fetch_package_info = mocker.AsyncMock(
-                side_effect=ValueError("Fetch failed")
-            )
-            mock_fetcher.__aenter__ = mocker.AsyncMock(return_value=mock_fetcher)
-            mock_fetcher.__aexit__ = mocker.AsyncMock(return_value=None)
-            mock_fetcher_class.return_value = mock_fetcher
+        # Mock fetcher to raise error
+        mock_fetcher_class = mocker.patch(
+            "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
+        )
+        mock_fetcher = mocker.AsyncMock()
+        mock_fetcher.fetch_package_info = mocker.AsyncMock(
+            side_effect=ValueError("Fetch failed")
+        )
+        mock_fetcher.__aenter__ = mocker.AsyncMock(return_value=mock_fetcher)
+        mock_fetcher.__aexit__ = mocker.AsyncMock(return_value=None)
+        mock_fetcher_class.return_value = mock_fetcher
 
-            with pytest.raises(ValueError, match="Fetch failed"):
-                await cache_manager.resolve_and_cache("requests", ">=2.0.0")
+        with pytest.raises(ValueError, match="Fetch failed"):
+            await cache_manager.resolve_and_cache("requests", ">=2.0.0")
 
 
 class TestEdgeCases:
@@ -505,15 +497,15 @@ class TestEdgeCases:
     def test_cache_key_sanitization(self, cache_manager, sample_package_info, mocker):
         """Test that cache keys are properly sanitized."""
         # This test verifies that sanitize_cache_key is called
-        with mocker.patch(
+        mock_sanitize = mocker.patch(
             "src.autodocs_mcp.core.cache_manager.sanitize_cache_key",
             return_value="sanitized-key",
-        ) as mock_sanitize:
-            cache_manager.cache_dir / "sanitized-key.json"
+        )
+        cache_manager.cache_dir / "sanitized-key.json"
 
-            # The function should be called during cache operations
-            cache_manager.get_cached_entry_safe("unsafe/key\\with:special*chars")
-            mock_sanitize.assert_called_with("unsafe/key\\with:special*chars")
+        # The function should be called during cache operations
+        cache_manager.get_cached_entry_safe("unsafe/key\\with:special*chars")
+        mock_sanitize.assert_called_with("unsafe/key\\with:special*chars")
 
     @pytest.mark.asyncio
     async def test_concurrent_cache_operations(

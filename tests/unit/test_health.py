@@ -262,32 +262,25 @@ class TestHealthChecker:
 
     async def test_get_overall_health_with_unhealthy(self, mocker):
         """Test overall health with unhealthy components."""
-        with (
-            mocker.patch.object(
-                self.health_checker, "check_cache_manager"
-            ) as mock_cache,
-            mocker.patch.object(
-                self.health_checker, "check_pypi_connectivity"
-            ) as mock_pypi,
-            mocker.patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            mocker.patch.object(
-                self.health_checker, "check_context_fetcher"
-            ) as mock_context,
-        ):
-            mock_cache.return_value = HealthCheck(
-                "cache", HealthStatus.UNHEALTHY, "down", 0.0, 123.0
-            )
-            mock_pypi.return_value = HealthCheck(
-                "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
-            )
-            mock_deps.return_value = HealthCheck(
-                "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
-            )
-            mock_context.return_value = HealthCheck(
-                "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
-            )
+        mock_cache = mocker.patch.object(self.health_checker, "check_cache_manager")
+        mock_pypi = mocker.patch.object(self.health_checker, "check_pypi_connectivity")
+        mock_deps = mocker.patch.object(self.health_checker, "check_dependencies")
+        mock_context = mocker.patch.object(self.health_checker, "check_context_fetcher")
 
-            result = await self.health_checker.get_overall_health()
+        mock_cache.return_value = HealthCheck(
+            "cache", HealthStatus.UNHEALTHY, "down", 0.0, 123.0
+        )
+        mock_pypi.return_value = HealthCheck(
+            "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
+        )
+        mock_deps.return_value = HealthCheck(
+            "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
+        )
+        mock_context.return_value = HealthCheck(
+            "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
+        )
+
+        result = await self.health_checker.get_overall_health()
 
         assert result["status"] == "unhealthy"
         assert result["summary"]["healthy"] == 3
@@ -296,30 +289,23 @@ class TestHealthChecker:
 
     async def test_get_overall_health_with_exception(self, mocker):
         """Test overall health handling of exceptions."""
-        with (
-            mocker.patch.object(
-                self.health_checker, "check_cache_manager"
-            ) as mock_cache,
-            mocker.patch.object(
-                self.health_checker, "check_pypi_connectivity"
-            ) as mock_pypi,
-            mocker.patch.object(self.health_checker, "check_dependencies") as mock_deps,
-            mocker.patch.object(
-                self.health_checker, "check_context_fetcher"
-            ) as mock_context,
-        ):
-            mock_cache.side_effect = Exception("Check failed")
-            mock_pypi.return_value = HealthCheck(
-                "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
-            )
-            mock_deps.return_value = HealthCheck(
-                "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
-            )
-            mock_context.return_value = HealthCheck(
-                "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
-            )
+        mock_cache = mocker.patch.object(self.health_checker, "check_cache_manager")
+        mock_pypi = mocker.patch.object(self.health_checker, "check_pypi_connectivity")
+        mock_deps = mocker.patch.object(self.health_checker, "check_dependencies")
+        mock_context = mocker.patch.object(self.health_checker, "check_context_fetcher")
 
-            result = await self.health_checker.get_overall_health()
+        mock_cache.side_effect = Exception("Check failed")
+        mock_pypi.return_value = HealthCheck(
+            "pypi", HealthStatus.HEALTHY, "ok", 20.0, 124.0
+        )
+        mock_deps.return_value = HealthCheck(
+            "deps", HealthStatus.HEALTHY, "ok", 15.0, 125.0
+        )
+        mock_context.return_value = HealthCheck(
+            "context", HealthStatus.HEALTHY, "ok", 5.0, 126.0
+        )
+
+        result = await self.health_checker.get_overall_health()
 
         assert result["status"] == "unhealthy"
         assert result["summary"]["healthy"] == 3
@@ -341,13 +327,12 @@ class TestHealthChecker:
 
     async def test_get_readiness_status_not_ready(self, mocker):
         """Test readiness check when services not ready."""
-        with (
-            mocker.patch("autodocs_mcp.main.parser", None),
-            mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock()),
-            mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock()),
-            mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock()),
-        ):
-            result = await self.health_checker.get_readiness_status()
+        mocker.patch("autodocs_mcp.main.parser", None)
+        mocker.patch("autodocs_mcp.main.cache_manager", mocker.MagicMock())
+        mocker.patch("autodocs_mcp.main.version_resolver", mocker.MagicMock())
+        mocker.patch("autodocs_mcp.main.context_fetcher", mocker.MagicMock())
+
+        result = await self.health_checker.get_readiness_status()
 
         assert result["ready"] is False
         assert "parser" in result["reason"]

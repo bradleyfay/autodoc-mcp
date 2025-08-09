@@ -102,19 +102,19 @@ class TestMCPTools:
 
         mock_services["parser"].parse_project.side_effect = ValueError("Generic error")
 
-        with mocker.patch("autodocs_mcp.main.ErrorFormatter") as mock_formatter:
-            mock_error = mocker.MagicMock()
-            mock_error.message = "Unexpected error occurred"
-            mock_error.suggestion = "Try again"
-            mock_error.severity.value = "error"
-            mock_error.error_code = "unexpected_error"
-            mock_error.recoverable = True
-            mock_formatter.format_exception.return_value = mock_error
+        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_error = mocker.MagicMock()
+        mock_error.message = "Unexpected error occurred"
+        mock_error.suggestion = "Try again"
+        mock_error.severity.value = "error"
+        mock_error.error_code = "unexpected_error"
+        mock_error.recoverable = True
+        mock_formatter.format_exception.return_value = mock_error
 
-            result = await scan_dependencies.fn("/test/project")
+        result = await scan_dependencies.fn("/test/project")
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "unexpected_error"
+        assert result["success"] is False
+        assert result["error"]["code"] == "unexpected_error"
 
     @pytest.mark.asyncio
     async def test_get_package_docs_success(self, mock_services, mocker):
@@ -149,30 +149,27 @@ class TestMCPTools:
             license="Apache 2.0",
         )
 
-        with (
-            mocker.patch(
-                "autodocs_mcp.main.PyPIDocumentationFetcher"
-            ) as mock_fetcher_class,
-            mocker.patch("autodocs_mcp.main.InputValidator") as mock_validator,
-        ):
-            mock_fetcher = mocker.AsyncMock()
-            mock_fetcher.fetch_package_info = mocker.AsyncMock(
-                return_value=mock_package_info
-            )
-            mock_fetcher.format_documentation.return_value = "# requests v2.28.2\n..."
-            mock_fetcher_class.return_value.__aenter__.return_value = mock_fetcher
-            mock_fetcher_class.return_value.__aexit__.return_value = None
+        mock_fetcher_class = mocker.patch("autodocs_mcp.main.PyPIDocumentationFetcher")
+        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
 
-            mock_validator.validate_package_name.return_value = "requests"
-            mock_validator.validate_version_constraint.return_value = ">=2.0.0"
+        mock_fetcher = mocker.AsyncMock()
+        mock_fetcher.fetch_package_info = mocker.AsyncMock(
+            return_value=mock_package_info
+        )
+        mock_fetcher.format_documentation.return_value = "# requests v2.28.2\n..."
+        mock_fetcher_class.return_value.__aenter__.return_value = mock_fetcher
+        mock_fetcher_class.return_value.__aexit__.return_value = None
 
-            result = await get_package_docs.fn("requests", ">=2.0.0", None)
+        mock_validator.validate_package_name.return_value = "requests"
+        mock_validator.validate_version_constraint.return_value = ">=2.0.0"
 
-            assert result["success"] is True
-            assert result["package_name"] == "requests"
-            assert result["version"] == "2.28.2"
-            assert result["from_cache"] is False
-            assert "documentation" in result
+        result = await get_package_docs.fn("requests", ">=2.0.0", None)
+
+        assert result["success"] is True
+        assert result["package_name"] == "requests"
+        assert result["version"] == "2.28.2"
+        assert result["from_cache"] is False
+        assert "documentation" in result
 
     @pytest.mark.asyncio
     async def test_get_package_docs_cache_hit(self, mock_services, mocker):
@@ -210,39 +207,34 @@ class TestMCPTools:
             return_value=mock_cache_entry
         )
 
-        with (
-            mocker.patch(
-                "autodocs_mcp.main.PyPIDocumentationFetcher"
-            ) as mock_fetcher_class,
-            mocker.patch("autodocs_mcp.main.InputValidator") as mock_validator,
-        ):
-            mock_fetcher = mocker.AsyncMock()
-            mock_fetcher.format_documentation.return_value = "# requests v2.28.2\n..."
-            mock_fetcher_class.return_value.__aenter__.return_value = mock_fetcher
-            mock_fetcher_class.return_value.__aexit__.return_value = None
+        mock_fetcher_class = mocker.patch("autodocs_mcp.main.PyPIDocumentationFetcher")
+        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
 
-            mock_validator.validate_package_name.return_value = "requests"
+        mock_fetcher = mocker.AsyncMock()
+        mock_fetcher.format_documentation.return_value = "# requests v2.28.2\n..."
+        mock_fetcher_class.return_value.__aenter__.return_value = mock_fetcher
+        mock_fetcher_class.return_value.__aexit__.return_value = None
 
-            result = await get_package_docs.fn("requests", None, None)
+        mock_validator.validate_package_name.return_value = "requests"
 
-            assert result["success"] is True
-            assert result["from_cache"] is True
-            # Should not call set when cache hit
-            mock_services["cache_manager"].set.assert_not_called()
+        result = await get_package_docs.fn("requests", None, None)
+
+        assert result["success"] is True
+        assert result["from_cache"] is True
+        # Should not call set when cache hit
+        mock_services["cache_manager"].set.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_get_package_docs_services_not_initialized(self, mocker):
         """Test get_package_docs when services are None."""
         from autodocs_mcp.main import get_package_docs
 
-        with (
-            mocker.patch("autodocs_mcp.main.cache_manager", None),
-            mocker.patch("autodocs_mcp.main.version_resolver", None),
-        ):
-            result = await get_package_docs.fn("requests")
+        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        mocker.patch("autodocs_mcp.main.version_resolver", None)
+        result = await get_package_docs.fn("requests")
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "service_not_initialized"
+        assert result["success"] is False
+        assert result["error"]["code"] == "service_not_initialized"
 
     @pytest.mark.asyncio
     async def test_get_package_docs_package_not_found(self, mock_services, mocker):
@@ -253,23 +245,21 @@ class TestMCPTools:
             side_effect=PackageNotFoundError("Package not found")
         )
 
-        with (
-            mocker.patch("autodocs_mcp.main.InputValidator") as mock_validator,
-            mocker.patch("autodocs_mcp.main.ErrorFormatter") as mock_formatter,
-        ):
-            mock_validator.validate_package_name.return_value = "nonexistent"
-            mock_error = mocker.MagicMock()
-            mock_error.message = "Package 'nonexistent' not found on PyPI"
-            mock_error.suggestion = "Check package name spelling"
-            mock_error.severity.value = "error"
-            mock_error.error_code = "package_not_found"
-            mock_error.recoverable = True
-            mock_formatter.format_exception.return_value = mock_error
+        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
+        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_validator.validate_package_name.return_value = "nonexistent"
+        mock_error = mocker.MagicMock()
+        mock_error.message = "Package 'nonexistent' not found on PyPI"
+        mock_error.suggestion = "Check package name spelling"
+        mock_error.severity.value = "error"
+        mock_error.error_code = "package_not_found"
+        mock_error.recoverable = True
+        mock_formatter.format_exception.return_value = mock_error
 
-            result = await get_package_docs.fn("nonexistent")
+        result = await get_package_docs.fn("nonexistent")
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "package_not_found"
+        assert result["success"] is False
+        assert result["error"]["code"] == "package_not_found"
 
     @pytest.mark.asyncio
     async def test_get_package_docs_with_context_success(self, mock_services, mocker):
@@ -295,25 +285,25 @@ class TestMCPTools:
             return_value=(mock_context, mock_performance)
         )
 
-        with mocker.patch("autodocs_mcp.main.InputValidator") as mock_validator:
-            mock_validator.validate_package_name.return_value = "requests"
+        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
+        mock_validator.validate_package_name.return_value = "requests"
 
-            result = await get_package_docs_with_context.fn("requests")
+        result = await get_package_docs_with_context.fn("requests")
 
-            assert result["success"] is True
-            assert result["context"]["primary_package"]["name"] == "requests"
-            assert result["performance"]["fetch_time"] == 1.5
+        assert result["success"] is True
+        assert result["context"]["primary_package"]["name"] == "requests"
+        assert result["performance"]["fetch_time"] == 1.5
 
     @pytest.mark.asyncio
     async def test_get_package_docs_with_context_not_initialized(self, mocker):
         """Test get_package_docs_with_context when context_fetcher is None."""
         from autodocs_mcp.main import get_package_docs_with_context
 
-        with mocker.patch("autodocs_mcp.main.context_fetcher", None):
-            result = await get_package_docs_with_context.fn("requests")
+        mocker.patch("autodocs_mcp.main.context_fetcher", None)
+        result = await get_package_docs_with_context.fn("requests")
 
-            assert result["success"] is False
-            assert "Context fetcher not initialized" in result["error"]["message"]
+        assert result["success"] is False
+        assert "Context fetcher not initialized" in result["error"]["message"]
 
     @pytest.mark.asyncio
     async def test_refresh_cache_success(self, mock_services):
@@ -342,11 +332,11 @@ class TestMCPTools:
         """Test refresh_cache when cache_manager is None."""
         from autodocs_mcp.main import refresh_cache
 
-        with mocker.patch("autodocs_mcp.main.cache_manager", None):
-            result = await refresh_cache.fn()
+        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        result = await refresh_cache.fn()
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "service_not_initialized"
+        assert result["success"] is False
+        assert result["error"]["code"] == "service_not_initialized"
 
     @pytest.mark.asyncio
     async def test_get_cache_stats_success(self, mock_services):
@@ -375,11 +365,11 @@ class TestMCPTools:
         """Test get_cache_stats when cache_manager is None."""
         from autodocs_mcp.main import get_cache_stats
 
-        with mocker.patch("autodocs_mcp.main.cache_manager", None):
-            result = await get_cache_stats.fn()
+        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        result = await get_cache_stats.fn()
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "service_not_initialized"
+        assert result["success"] is False
+        assert result["error"]["code"] == "service_not_initialized"
 
     @pytest.mark.asyncio
     async def test_get_cache_stats_error_handling(self, mock_services, mocker):
@@ -390,19 +380,19 @@ class TestMCPTools:
             side_effect=Exception("Cache error")
         )
 
-        with mocker.patch("autodocs_mcp.main.ErrorFormatter") as mock_formatter:
-            mock_error = mocker.MagicMock()
-            mock_error.message = "Failed to retrieve cache statistics"
-            mock_error.suggestion = "Check cache directory permissions"
-            mock_error.severity.value = "error"
-            mock_error.error_code = "cache_stats_error"
-            mock_error.recoverable = True
-            mock_formatter.format_exception.return_value = mock_error
+        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_error = mocker.MagicMock()
+        mock_error.message = "Failed to retrieve cache statistics"
+        mock_error.suggestion = "Check cache directory permissions"
+        mock_error.severity.value = "error"
+        mock_error.error_code = "cache_stats_error"
+        mock_error.recoverable = True
+        mock_formatter.format_exception.return_value = mock_error
 
-            result = await get_cache_stats.fn()
+        result = await get_cache_stats.fn()
 
-            assert result["success"] is False
-            assert result["error"]["code"] == "cache_stats_error"
+        assert result["success"] is False
+        assert result["error"]["code"] == "cache_stats_error"
 
 
 class TestServiceInitialization:
@@ -413,50 +403,46 @@ class TestServiceInitialization:
         """Test successful service initialization."""
         from autodocs_mcp.main import initialize_services
 
-        with (
-            mocker.patch("autodocs_mcp.main.get_config") as mock_config,
-            mocker.patch("autodocs_mcp.main.PyProjectParser"),
-            mocker.patch("autodocs_mcp.main.FileCacheManager") as mock_cache_class,
-            mocker.patch("autodocs_mcp.main.VersionResolver"),
-            mocker.patch(
-                "autodocs_mcp.main.create_context_fetcher"
-            ) as mock_create_context,
-        ):
-            mock_config.return_value.cache_dir = Path("/tmp/cache")
+        mock_config = mocker.patch("autodocs_mcp.main.get_config")
+        mocker.patch("autodocs_mcp.main.PyProjectParser")
+        mock_cache_class = mocker.patch("autodocs_mcp.main.FileCacheManager")
+        mocker.patch("autodocs_mcp.main.VersionResolver")
+        mock_create_context = mocker.patch("autodocs_mcp.main.create_context_fetcher")
 
-            mock_cache_manager = mocker.AsyncMock()
-            mock_cache_manager.initialize = mocker.AsyncMock()
-            mock_cache_class.return_value = mock_cache_manager
+        mock_config.return_value.cache_dir = Path("/tmp/cache")
 
-            mock_context_fetcher = mocker.AsyncMock()
-            mock_create_context.return_value = mock_context_fetcher
+        mock_cache_manager = mocker.AsyncMock()
+        mock_cache_manager.initialize = mocker.AsyncMock()
+        mock_cache_class.return_value = mock_cache_manager
 
-            await initialize_services()
+        mock_context_fetcher = mocker.AsyncMock()
+        mock_create_context.return_value = mock_context_fetcher
 
-            mock_cache_manager.initialize.assert_called_once()
-            mock_create_context.assert_called_once_with(mock_cache_manager)
+        await initialize_services()
+
+        mock_cache_manager.initialize.assert_called_once()
+        mock_create_context.assert_called_once_with(mock_cache_manager)
 
     @pytest.mark.asyncio
     async def test_initialize_services_cache_failure(self, mocker):
         """Test service initialization with cache manager failure."""
         from autodocs_mcp.main import initialize_services
 
-        with (
-            mocker.patch("autodocs_mcp.main.get_config") as mock_config,
-            mocker.patch("autodocs_mcp.main.PyProjectParser"),
-            mocker.patch("autodocs_mcp.main.FileCacheManager") as mock_cache_class,
-            mocker.patch("autodocs_mcp.main.VersionResolver"),
-        ):
-            mock_config.return_value.cache_dir = Path("/tmp/cache")
+        mock_config = mocker.patch("autodocs_mcp.main.get_config")
+        mocker.patch("autodocs_mcp.main.PyProjectParser")
+        mock_cache_class = mocker.patch("autodocs_mcp.main.FileCacheManager")
+        mocker.patch("autodocs_mcp.main.VersionResolver")
 
-            mock_cache_manager = mocker.AsyncMock()
-            mock_cache_manager.initialize = mocker.AsyncMock(
-                side_effect=Exception("Cache init failed")
-            )
-            mock_cache_class.return_value = mock_cache_manager
+        mock_config.return_value.cache_dir = Path("/tmp/cache")
 
-            with pytest.raises(Exception, match="Cache init failed"):
-                await initialize_services()
+        mock_cache_manager = mocker.AsyncMock()
+        mock_cache_manager.initialize = mocker.AsyncMock(
+            side_effect=Exception("Cache init failed")
+        )
+        mock_cache_class.return_value = mock_cache_manager
+
+        with pytest.raises(Exception, match="Cache init failed"):
+            await initialize_services()
 
 
 class TestGracefulShutdown:
@@ -470,15 +456,13 @@ class TestGracefulShutdown:
         shutdown_handler = GracefulShutdown()
         shutdown_handler.active_requests = 0
 
-        with mocker.patch.object(
-            shutdown_handler, "_cleanup_resources"
-        ) as mock_cleanup:
-            mock_cleanup.return_value = None
-            shutdown_handler.shutdown_event.set()
+        mock_cleanup = mocker.patch.object(shutdown_handler, "_cleanup_resources")
+        mock_cleanup.return_value = None
+        shutdown_handler.shutdown_event.set()
 
-            await shutdown_handler.wait_for_shutdown()
+        await shutdown_handler.wait_for_shutdown()
 
-            mock_cleanup.assert_called_once()
+        mock_cleanup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_graceful_shutdown_with_active_requests(self, mocker):
@@ -492,19 +476,18 @@ class TestGracefulShutdown:
             await asyncio.sleep(0.1)  # Simulate request completion
             shutdown_handler.active_requests = 0
 
-        with (
-            mocker.patch.object(shutdown_handler, "_cleanup_resources") as mock_cleanup,
-            mocker.patch("asyncio.sleep", side_effect=[None, None]),
-        ):
-            mock_cleanup.return_value = None
-            shutdown_handler.shutdown_event.set()
+        mock_cleanup = mocker.patch.object(shutdown_handler, "_cleanup_resources")
+        mocker.patch("asyncio.sleep", side_effect=[None, None])
 
-            # Start background task to simulate requests completing
-            asyncio.create_task(mock_requests_complete())
+        mock_cleanup.return_value = None
+        shutdown_handler.shutdown_event.set()
 
-            await shutdown_handler.wait_for_shutdown()
+        # Start background task to simulate requests completing
+        asyncio.create_task(mock_requests_complete())
 
-            mock_cleanup.assert_called_once()
+        await shutdown_handler.wait_for_shutdown()
+
+        mock_cleanup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_graceful_shutdown_timeout(self, mocker):
@@ -515,16 +498,14 @@ class TestGracefulShutdown:
         shutdown_handler.active_requests = 5
         shutdown_handler.max_shutdown_wait = 0.1  # Very short timeout
 
-        with mocker.patch.object(
-            shutdown_handler, "_cleanup_resources"
-        ) as mock_cleanup:
-            mock_cleanup.return_value = None
-            shutdown_handler.shutdown_event.set()
+        mock_cleanup = mocker.patch.object(shutdown_handler, "_cleanup_resources")
+        mock_cleanup.return_value = None
+        shutdown_handler.shutdown_event.set()
 
-            await shutdown_handler.wait_for_shutdown()
+        await shutdown_handler.wait_for_shutdown()
 
-            # Should force shutdown after timeout
-            mock_cleanup.assert_called_once()
+        # Should force shutdown after timeout
+        mock_cleanup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_cleanup_resources(self, mocker):
@@ -533,17 +514,16 @@ class TestGracefulShutdown:
 
         shutdown_handler = GracefulShutdown()
 
-        with (
-            mocker.patch("autodocs_mcp.main.ConnectionPoolManager") as mock_pool_class,
-            mocker.patch("autodocs_mcp.main.cache_manager"),
-        ):
-            mock_pool_manager = mocker.AsyncMock()
-            mock_pool_manager.close_all = mocker.AsyncMock()
-            mock_pool_class.return_value = mock_pool_manager
+        mock_pool_class = mocker.patch("autodocs_mcp.main.ConnectionPoolManager")
+        mocker.patch("autodocs_mcp.main.cache_manager")
 
-            await shutdown_handler._cleanup_resources()
+        mock_pool_manager = mocker.AsyncMock()
+        mock_pool_manager.close_all = mocker.AsyncMock()
+        mock_pool_class.return_value = mock_pool_manager
 
-            mock_pool_manager.close_all.assert_called_once()
+        await shutdown_handler._cleanup_resources()
+
+        mock_pool_manager.close_all.assert_called_once()
 
     def test_signal_handler(self):
         """Test signal handler registration and handling."""
@@ -594,83 +574,78 @@ class TestMainFunctions:
         """Test successful async_main execution."""
         from autodocs_mcp.main import async_main
 
-        with (
-            mocker.patch("autodocs_mcp.main.initialize_services") as mock_init,
-            mocker.patch("autodocs_mcp.main.run_mcp_server"),
-            mocker.patch("autodocs_mcp.main.GracefulShutdown") as mock_shutdown_class,
-        ):
-            mock_init.return_value = None
-            mock_server_task = mocker.AsyncMock()
-            mock_shutdown_task = mocker.AsyncMock()
+        mock_init = mocker.patch("autodocs_mcp.main.initialize_services")
+        mocker.patch("autodocs_mcp.main.run_mcp_server")
+        mock_shutdown_class = mocker.patch("autodocs_mcp.main.GracefulShutdown")
 
-            mock_shutdown_handler = mocker.AsyncMock()
-            mock_shutdown_handler.register_signals.return_value = None
-            mock_shutdown_handler.wait_for_shutdown.return_value = None
-            mock_shutdown_handler._cleanup_resources.return_value = None
-            mock_shutdown_class.return_value = mock_shutdown_handler
+        mock_init.return_value = None
+        mock_server_task = mocker.AsyncMock()
+        mock_shutdown_task = mocker.AsyncMock()
 
-            with (
-                mocker.patch(
-                    "asyncio.create_task",
-                    side_effect=[mock_server_task, mock_shutdown_task],
-                ),
-                mocker.patch(
-                    "asyncio.wait",
-                    return_value=({mock_shutdown_task}, {mock_server_task}),
-                ),
-            ):
-                await async_main()
+        mock_shutdown_handler = mocker.AsyncMock()
+        mock_shutdown_handler.register_signals.return_value = None
+        mock_shutdown_handler.wait_for_shutdown.return_value = None
+        mock_shutdown_handler._cleanup_resources.return_value = None
+        mock_shutdown_class.return_value = mock_shutdown_handler
 
-            mock_init.assert_called_once()
-            mock_shutdown_handler.register_signals.assert_called_once()
+        mocker.patch(
+            "asyncio.create_task",
+            side_effect=[mock_server_task, mock_shutdown_task],
+        )
+        mocker.patch(
+            "asyncio.wait",
+            return_value=({mock_shutdown_task}, {mock_server_task}),
+        )
+
+        await async_main()
+
+        mock_init.assert_called_once()
+        mock_shutdown_handler.register_signals.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_async_main_initialization_failure(self, mocker):
         """Test async_main with service initialization failure."""
         from autodocs_mcp.main import async_main
 
-        with (
-            mocker.patch("autodocs_mcp.main.initialize_services") as mock_init,
-            mocker.patch("autodocs_mcp.main.GracefulShutdown") as mock_shutdown_class,
-        ):
-            mock_init.side_effect = Exception("Initialization failed")
+        mock_init = mocker.patch("autodocs_mcp.main.initialize_services")
+        mock_shutdown_class = mocker.patch("autodocs_mcp.main.GracefulShutdown")
 
-            mock_shutdown_handler = mocker.AsyncMock()
-            mock_shutdown_handler.register_signals.return_value = None
-            mock_shutdown_handler._cleanup_resources.return_value = None
-            mock_shutdown_class.return_value = mock_shutdown_handler
+        mock_init.side_effect = Exception("Initialization failed")
 
-            with pytest.raises(Exception, match="Initialization failed"):
-                await async_main()
+        mock_shutdown_handler = mocker.AsyncMock()
+        mock_shutdown_handler.register_signals.return_value = None
+        mock_shutdown_handler._cleanup_resources.return_value = None
+        mock_shutdown_class.return_value = mock_shutdown_handler
 
-            # Should still cleanup resources
-            mock_shutdown_handler._cleanup_resources.assert_called_once()
+        with pytest.raises(Exception, match="Initialization failed"):
+            await async_main()
+
+        # Should still cleanup resources
+        mock_shutdown_handler._cleanup_resources.assert_called_once()
 
     def test_main_function_keyboard_interrupt(self, mocker):
         """Test main function handling KeyboardInterrupt."""
         from autodocs_mcp.main import main
 
-        with (
-            mocker.patch("autodocs_mcp.main.asyncio.run") as mock_run,
-            mocker.patch("autodocs_mcp.main.logger") as mock_logger,
-        ):
-            mock_run.side_effect = KeyboardInterrupt()
+        mock_run = mocker.patch("autodocs_mcp.main.asyncio.run")
+        mock_logger = mocker.patch("autodocs_mcp.main.logger")
 
-            main()  # Should not raise
+        mock_run.side_effect = KeyboardInterrupt()
 
-            mock_logger.info.assert_called_with("Server shutdown requested")
+        main()  # Should not raise
+
+        mock_logger.info.assert_called_with("Server shutdown requested")
 
     def test_main_function_generic_exception(self, mocker):
         """Test main function handling generic exception."""
         from autodocs_mcp.main import main
 
-        with (
-            mocker.patch("autodocs_mcp.main.asyncio.run") as mock_run,
-            mocker.patch("autodocs_mcp.main.logger") as mock_logger,
-        ):
-            mock_run.side_effect = Exception("Server error")
+        mock_run = mocker.patch("autodocs_mcp.main.asyncio.run")
+        mock_logger = mocker.patch("autodocs_mcp.main.logger")
 
-            with pytest.raises(Exception, match="Server error"):
-                main()
+        mock_run.side_effect = Exception("Server error")
 
-            mock_logger.error.assert_called_with("Server failed", error="Server error")
+        with pytest.raises(Exception, match="Server error"):
+            main()
+
+        mock_logger.error.assert_called_with("Server failed", error="Server error")

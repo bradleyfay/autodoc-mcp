@@ -266,43 +266,43 @@ dependencies = ["requests>=2.28.0"]
         pyproject_path.write_text(pyproject_content)
 
         # Mock network failure for version resolution
-        with mocker.patch(
+        mock_client_class = mocker.patch(
             "src.autodocs_mcp.core.version_resolver.NetworkResilientClient"
-        ) as mock_client_class:
-            mock_client = mocker.Mock()
-            mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
-            mock_client.__aexit__ = mocker.Mock(return_value=None)
-            mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
-            mock_client_class.return_value = mock_client
+        )
+        mock_client = mocker.Mock()
+        mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
+        mock_client.__aexit__ = mocker.Mock(return_value=None)
+        mock_client.get_with_retry.side_effect = NetworkError("Connection failed")
+        mock_client_class.return_value = mock_client
 
-            # Test that errors are handled gracefully
-            version_resolver = VersionResolver()
+        # Test that errors are handled gracefully
+        version_resolver = VersionResolver()
 
-            with pytest.raises(NetworkError):
-                await version_resolver.resolve_version("requests", ">=2.28.0")
+        with pytest.raises(NetworkError):
+            await version_resolver.resolve_version("requests", ">=2.28.0")
 
     @pytest.mark.asyncio
     async def test_package_not_found_recovery(self, temp_cache_dir, mocker):
         """Test recovery from package not found errors."""
         # Mock PyPI client to return 404
-        with mocker.patch(
+        mock_client_class = mocker.patch(
             "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient"
-        ) as mock_client_class:
-            mock_client = mocker.Mock()
-            mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
-            mock_client.__aexit__ = mocker.Mock(return_value=None)
-            mock_client.get_with_retry.side_effect = PackageNotFoundError(
-                "Package not found"
-            )
-            mock_client_class.return_value = mock_client
+        )
+        mock_client = mocker.Mock()
+        mock_client.__aenter__ = mocker.Mock(return_value=mock_client)
+        mock_client.__aexit__ = mocker.Mock(return_value=None)
+        mock_client.get_with_retry.side_effect = PackageNotFoundError(
+            "Package not found"
+        )
+        mock_client_class.return_value = mock_client
 
-            # Test safe fetch handles error gracefully
-            async with PyPIDocumentationFetcher() as fetcher:
-                result = await fetcher.fetch_package_info_safe("nonexistent-package")
+        # Test safe fetch handles error gracefully
+        async with PyPIDocumentationFetcher() as fetcher:
+            result = await fetcher.fetch_package_info_safe("nonexistent-package")
 
-                assert result.success is False
-                assert len(result.errors) == 1
-                assert result.package_info is None
+            assert result.success is False
+            assert len(result.errors) == 1
+            assert result.package_info is None
 
     @pytest.mark.asyncio
     async def test_cache_corruption_recovery(self, temp_cache_dir):
