@@ -39,3 +39,22 @@ def sample_pyproject_file(temp_dir: Path, sample_pyproject_content: str) -> Path
     pyproject_path = temp_dir / "pyproject.toml"
     pyproject_path.write_text(sample_pyproject_content)
     return temp_dir
+
+
+@pytest.fixture
+def mock_services(mocker):
+    """Provide mocked services for testing MCP tools."""
+    services = {
+        "parser": mocker.AsyncMock(),
+        "cache_manager": mocker.AsyncMock(),
+        "version_resolver": mocker.AsyncMock(),
+        "context_fetcher": mocker.AsyncMock(),
+    }
+
+    # Patch the global services in main module
+    mocker.patch("autodocs_mcp.main.parser", services["parser"])
+    mocker.patch("autodocs_mcp.main.cache_manager", services["cache_manager"])
+    mocker.patch("autodocs_mcp.main.version_resolver", services["version_resolver"])
+    mocker.patch("autodocs_mcp.main.context_fetcher", services["context_fetcher"])
+
+    return services

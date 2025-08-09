@@ -2,7 +2,24 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(gh run view:*)",
+      "Bash(uv run:*)",
+      "Bash(git checkout:*)",
+      "Bash(timeout 5 uv run:*)",
+      "Bash(gtimeout 5 uv run python -m src.autodocs_mcp.main)",
+      "Bash(git merge:*)",
+      "Bash(uv lock:*)",
+      "Bash(python -m pytest tests/unit/test_config_validation.py::TestAutoDocsConfigValidation::test_default_config_creation -v)",
+      "Bash(gh run list:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr:*)"
     ],
     "deny": []
   },
