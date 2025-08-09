@@ -37,7 +37,7 @@ dev = [
 ]
 
 [project.scripts]
-autodocs-mcp = "autodocs_mcp.main:main"
+autodoc-mcp = "autodoc_mcp.main:main"
 
 [project.urls]
 Homepage = "https://github.com/bradleyfay/autodoc-mcp"
@@ -54,14 +54,14 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
-test-cov = "pytest --cov=src/autodocs_mcp {args:tests}"
+test-cov = "pytest --cov=src/autodoc_mcp {args:tests}"
 lint = "ruff check {args:src tests}"
 format = "ruff format {args:src tests}"
 typecheck = "mypy {args:src}"
-dev = "python src/autodocs_mcp/main.py"
+dev = "python src/autodoc_mcp/main.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/autodocs_mcp"]
+packages = ["src/autodoc_mcp"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -98,7 +98,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["src/autodocs_mcp"]
+source = ["src/autodoc_mcp"]
 
 [tool.coverage.report]
 exclude_lines = [

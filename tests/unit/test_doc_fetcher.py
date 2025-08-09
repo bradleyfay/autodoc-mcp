@@ -3,12 +3,12 @@
 import pytest
 from httpx import Response
 
-from src.autodocs_mcp.core.doc_fetcher import (
+from src.autodoc_mcp.core.doc_fetcher import (
     DocFetchResult,
     PyPIDocumentationFetcher,
 )
-from src.autodocs_mcp.exceptions import NetworkError, PackageNotFoundError
-from src.autodocs_mcp.models import PackageInfo
+from src.autodoc_mcp.exceptions import NetworkError, PackageNotFoundError
+from src.autodoc_mcp.models import PackageInfo
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ class TestPyPIDocumentationFetcher:
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 
@@ -80,7 +80,7 @@ class TestPyPIDocumentationFetcher:
         mock_client = mocker.AsyncMock()
 
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient",
+            "src.autodoc_mcp.core.doc_fetcher.NetworkResilientClient",
             return_value=mock_client,
         ):
             async with fetcher:
@@ -286,7 +286,7 @@ class TestDocumentationFormatting:
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 
@@ -295,7 +295,7 @@ class TestDocumentationFormatting:
     ):
         """Test basic documentation formatting."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(sample_package_info)
 
@@ -312,7 +312,7 @@ class TestDocumentationFormatting:
     ):
         """Test documentation formatting with query filtering."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(
                 sample_package_info, query="http web"
@@ -347,7 +347,7 @@ class TestDocumentationFormatting:
         mock_config.max_documentation_size = 1000
 
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             formatted = fetcher.format_documentation(long_package)
 
@@ -384,7 +384,7 @@ class TestPyPIResponseParsing:
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 
@@ -481,7 +481,7 @@ class TestQueryFiltering:
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
         with mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.get_config", return_value=mock_config
+            "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
         ):
             return PyPIDocumentationFetcher()
 

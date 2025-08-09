@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from src.autodocs_mcp.security import (
+from src.autodoc_mcp.security import (
     InputValidator,
     sanitize_cache_key,
     validate_pypi_url,

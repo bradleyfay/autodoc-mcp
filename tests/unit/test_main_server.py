@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from autodocs_mcp.exceptions import (
+from autodoc_mcp.exceptions import (
     PackageNotFoundError,
     ProjectParsingError,
 )
-from autodocs_mcp.models import CacheEntry, PackageInfo, ScanResult
+from autodoc_mcp.models import CacheEntry, PackageInfo, ScanResult
 
 
 class TestMCPTools:
@@ -32,12 +32,12 @@ class TestMCPTools:
         # Use mocker instead of unittest.mock
         mock_parser = mocker.AsyncMock()
         mock_parser.parse_project = mocker.AsyncMock(return_value=mock_result)
-        mock_formatter = mocker.patch("autodocs_mcp.main.ResponseFormatter")
+        mock_formatter = mocker.patch("autodoc_mcp.main.ResponseFormatter")
         mock_validator = mocker.patch(
-            "autodocs_mcp.main.InputValidator.validate_project_path"
+            "autodoc_mcp.main.InputValidator.validate_project_path"
         )
 
-        mocker.patch("autodocs_mcp.main.parser", mock_parser)
+        mocker.patch("autodoc_mcp.main.parser", mock_parser)
         mock_formatter.format_scan_response.return_value = {
             "success": True,
             "dependency_count": 3,
@@ -45,7 +45,7 @@ class TestMCPTools:
         mock_validator.return_value = Path("/test/project")
 
         # Import and call the function directly
-        from autodocs_mcp.main import scan_dependencies
+        from autodoc_mcp.main import scan_dependencies
 
         result = await scan_dependencies.fn("/test/project")
 
@@ -56,9 +56,9 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_scan_dependencies_parser_not_initialized(self, mocker):
         """Test scan_dependencies when parser is None."""
-        from autodocs_mcp.main import scan_dependencies
+        from autodoc_mcp.main import scan_dependencies
 
-        mocker.patch("autodocs_mcp.main.parser", None)
+        mocker.patch("autodoc_mcp.main.parser", None)
         result = await scan_dependencies.fn("/test/project")
 
         assert result["success"] is False
@@ -69,7 +69,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_scan_dependencies_project_parsing_error(self, mock_services, mocker):
         """Test scan_dependencies with ProjectParsingError."""
-        from autodocs_mcp.main import scan_dependencies
+        from autodoc_mcp.main import scan_dependencies
 
         mock_services["parser"].parse_project.side_effect = ProjectParsingError(
             "Invalid project", Path("/test")
@@ -77,11 +77,11 @@ class TestMCPTools:
 
         # Need to mock InputValidator as well
         mocker.patch(
-            "autodocs_mcp.main.InputValidator.validate_project_path",
+            "autodoc_mcp.main.InputValidator.validate_project_path",
             return_value=Path("/test/project"),
         )
 
-        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_formatter = mocker.patch("autodoc_mcp.main.ErrorFormatter")
         mock_error = mocker.MagicMock()
         mock_error.message = "Invalid project structure"
         mock_error.suggestion = "Check pyproject.toml"
@@ -98,11 +98,11 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_scan_dependencies_generic_error(self, mock_services, mocker):
         """Test scan_dependencies with generic exception."""
-        from autodocs_mcp.main import scan_dependencies
+        from autodoc_mcp.main import scan_dependencies
 
         mock_services["parser"].parse_project.side_effect = ValueError("Generic error")
 
-        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_formatter = mocker.patch("autodoc_mcp.main.ErrorFormatter")
         mock_error = mocker.MagicMock()
         mock_error.message = "Unexpected error occurred"
         mock_error.suggestion = "Try again"
@@ -119,7 +119,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_success(self, mock_services, mocker):
         """Test successful package documentation retrieval."""
-        from autodocs_mcp.main import get_package_docs
+        from autodoc_mcp.main import get_package_docs
 
         # Mock services
         mock_services["version_resolver"].resolve_version = mocker.AsyncMock(
@@ -149,8 +149,8 @@ class TestMCPTools:
             license="Apache 2.0",
         )
 
-        mock_fetcher_class = mocker.patch("autodocs_mcp.main.PyPIDocumentationFetcher")
-        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
+        mock_fetcher_class = mocker.patch("autodoc_mcp.main.PyPIDocumentationFetcher")
+        mock_validator = mocker.patch("autodoc_mcp.main.InputValidator")
 
         mock_fetcher = mocker.AsyncMock()
         mock_fetcher.fetch_package_info = mocker.AsyncMock(
@@ -174,7 +174,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_cache_hit(self, mock_services, mocker):
         """Test package docs retrieval with cache hit."""
-        from autodocs_mcp.main import get_package_docs
+        from autodoc_mcp.main import get_package_docs
 
         mock_services["version_resolver"].resolve_version = mocker.AsyncMock(
             return_value="2.28.2"
@@ -207,8 +207,8 @@ class TestMCPTools:
             return_value=mock_cache_entry
         )
 
-        mock_fetcher_class = mocker.patch("autodocs_mcp.main.PyPIDocumentationFetcher")
-        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
+        mock_fetcher_class = mocker.patch("autodoc_mcp.main.PyPIDocumentationFetcher")
+        mock_validator = mocker.patch("autodoc_mcp.main.InputValidator")
 
         mock_fetcher = mocker.AsyncMock()
         mock_fetcher.format_documentation.return_value = "# requests v2.28.2\n..."
@@ -227,10 +227,10 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_services_not_initialized(self, mocker):
         """Test get_package_docs when services are None."""
-        from autodocs_mcp.main import get_package_docs
+        from autodoc_mcp.main import get_package_docs
 
-        mocker.patch("autodocs_mcp.main.cache_manager", None)
-        mocker.patch("autodocs_mcp.main.version_resolver", None)
+        mocker.patch("autodoc_mcp.main.cache_manager", None)
+        mocker.patch("autodoc_mcp.main.version_resolver", None)
         result = await get_package_docs.fn("requests")
 
         assert result["success"] is False
@@ -239,14 +239,14 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_package_not_found(self, mock_services, mocker):
         """Test get_package_docs with PackageNotFoundError."""
-        from autodocs_mcp.main import get_package_docs
+        from autodoc_mcp.main import get_package_docs
 
         mock_services["version_resolver"].resolve_version = mocker.AsyncMock(
             side_effect=PackageNotFoundError("Package not found")
         )
 
-        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
-        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_validator = mocker.patch("autodoc_mcp.main.InputValidator")
+        mock_formatter = mocker.patch("autodoc_mcp.main.ErrorFormatter")
         mock_validator.validate_package_name.return_value = "nonexistent"
         mock_error = mocker.MagicMock()
         mock_error.message = "Package 'nonexistent' not found on PyPI"
@@ -264,7 +264,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_with_context_success(self, mock_services, mocker):
         """Test successful context documentation retrieval."""
-        from autodocs_mcp.main import get_package_docs_with_context
+        from autodoc_mcp.main import get_package_docs_with_context
 
         # Mock context fetcher
         mock_context = mocker.MagicMock()
@@ -285,7 +285,7 @@ class TestMCPTools:
             return_value=(mock_context, mock_performance)
         )
 
-        mock_validator = mocker.patch("autodocs_mcp.main.InputValidator")
+        mock_validator = mocker.patch("autodoc_mcp.main.InputValidator")
         mock_validator.validate_package_name.return_value = "requests"
 
         result = await get_package_docs_with_context.fn("requests")
@@ -297,9 +297,9 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_package_docs_with_context_not_initialized(self, mocker):
         """Test get_package_docs_with_context when context_fetcher is None."""
-        from autodocs_mcp.main import get_package_docs_with_context
+        from autodoc_mcp.main import get_package_docs_with_context
 
-        mocker.patch("autodocs_mcp.main.context_fetcher", None)
+        mocker.patch("autodoc_mcp.main.context_fetcher", None)
         result = await get_package_docs_with_context.fn("requests")
 
         assert result["success"] is False
@@ -308,7 +308,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_refresh_cache_success(self, mock_services):
         """Test successful cache refresh."""
-        from autodocs_mcp.main import refresh_cache
+        from autodoc_mcp.main import refresh_cache
 
         # Mock cache stats
         initial_stats = {"total_entries": 5, "total_size_bytes": 50000}
@@ -330,9 +330,9 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_refresh_cache_not_initialized(self, mocker):
         """Test refresh_cache when cache_manager is None."""
-        from autodocs_mcp.main import refresh_cache
+        from autodoc_mcp.main import refresh_cache
 
-        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        mocker.patch("autodoc_mcp.main.cache_manager", None)
         result = await refresh_cache.fn()
 
         assert result["success"] is False
@@ -341,7 +341,7 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_cache_stats_success(self, mock_services):
         """Test successful cache statistics retrieval."""
-        from autodocs_mcp.main import get_cache_stats
+        from autodoc_mcp.main import get_cache_stats
 
         mock_stats = {
             "total_entries": 10,
@@ -363,9 +363,9 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_cache_stats_not_initialized(self, mocker):
         """Test get_cache_stats when cache_manager is None."""
-        from autodocs_mcp.main import get_cache_stats
+        from autodoc_mcp.main import get_cache_stats
 
-        mocker.patch("autodocs_mcp.main.cache_manager", None)
+        mocker.patch("autodoc_mcp.main.cache_manager", None)
         result = await get_cache_stats.fn()
 
         assert result["success"] is False
@@ -374,13 +374,13 @@ class TestMCPTools:
     @pytest.mark.asyncio
     async def test_get_cache_stats_error_handling(self, mock_services, mocker):
         """Test get_cache_stats with exception handling."""
-        from autodocs_mcp.main import get_cache_stats
+        from autodoc_mcp.main import get_cache_stats
 
         mock_services["cache_manager"].get_cache_stats = mocker.AsyncMock(
             side_effect=Exception("Cache error")
         )
 
-        mock_formatter = mocker.patch("autodocs_mcp.main.ErrorFormatter")
+        mock_formatter = mocker.patch("autodoc_mcp.main.ErrorFormatter")
         mock_error = mocker.MagicMock()
         mock_error.message = "Failed to retrieve cache statistics"
         mock_error.suggestion = "Check cache directory permissions"
@@ -401,13 +401,13 @@ class TestServiceInitialization:
     @pytest.mark.asyncio
     async def test_initialize_services_success(self, mocker):
         """Test successful service initialization."""
-        from autodocs_mcp.main import initialize_services
+        from autodoc_mcp.main import initialize_services
 
-        mock_config = mocker.patch("autodocs_mcp.main.get_config")
-        mocker.patch("autodocs_mcp.main.PyProjectParser")
-        mock_cache_class = mocker.patch("autodocs_mcp.main.FileCacheManager")
-        mocker.patch("autodocs_mcp.main.VersionResolver")
-        mock_create_context = mocker.patch("autodocs_mcp.main.create_context_fetcher")
+        mock_config = mocker.patch("autodoc_mcp.main.get_config")
+        mocker.patch("autodoc_mcp.main.PyProjectParser")
+        mock_cache_class = mocker.patch("autodoc_mcp.main.FileCacheManager")
+        mocker.patch("autodoc_mcp.main.VersionResolver")
+        mock_create_context = mocker.patch("autodoc_mcp.main.create_context_fetcher")
 
         mock_config.return_value.cache_dir = Path("/tmp/cache")
 
@@ -426,12 +426,12 @@ class TestServiceInitialization:
     @pytest.mark.asyncio
     async def test_initialize_services_cache_failure(self, mocker):
         """Test service initialization with cache manager failure."""
-        from autodocs_mcp.main import initialize_services
+        from autodoc_mcp.main import initialize_services
 
-        mock_config = mocker.patch("autodocs_mcp.main.get_config")
-        mocker.patch("autodocs_mcp.main.PyProjectParser")
-        mock_cache_class = mocker.patch("autodocs_mcp.main.FileCacheManager")
-        mocker.patch("autodocs_mcp.main.VersionResolver")
+        mock_config = mocker.patch("autodoc_mcp.main.get_config")
+        mocker.patch("autodoc_mcp.main.PyProjectParser")
+        mock_cache_class = mocker.patch("autodoc_mcp.main.FileCacheManager")
+        mocker.patch("autodoc_mcp.main.VersionResolver")
 
         mock_config.return_value.cache_dir = Path("/tmp/cache")
 
@@ -451,7 +451,7 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_graceful_shutdown_no_active_requests(self, mocker):
         """Test graceful shutdown with no active requests."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
         shutdown_handler.active_requests = 0
@@ -467,7 +467,7 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_graceful_shutdown_with_active_requests(self, mocker):
         """Test graceful shutdown waits for active requests."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
         shutdown_handler.active_requests = 2
@@ -492,7 +492,7 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_graceful_shutdown_timeout(self, mocker):
         """Test graceful shutdown with timeout."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
         shutdown_handler.active_requests = 5
@@ -510,14 +510,14 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_cleanup_resources(self, mocker):
         """Test resource cleanup functionality."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
 
         mock_pool_class = mocker.patch(
-            "autodocs_mcp.core.network_resilience.ConnectionPoolManager"
+            "autodoc_mcp.core.network_resilience.ConnectionPoolManager"
         )
-        mocker.patch("autodocs_mcp.main.cache_manager")
+        mocker.patch("autodoc_mcp.main.cache_manager")
 
         mock_pool_manager = mocker.AsyncMock()
         mock_pool_manager.close_all = mocker.AsyncMock()
@@ -529,7 +529,7 @@ class TestGracefulShutdown:
 
     def test_signal_handler(self):
         """Test signal handler registration and handling."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
 
@@ -541,7 +541,7 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_request_context_manager(self):
         """Test request context manager tracking."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
         assert shutdown_handler.active_requests == 0
@@ -554,7 +554,7 @@ class TestGracefulShutdown:
     @pytest.mark.asyncio
     async def test_request_context_manager_with_exception(self):
         """Test request context manager with exception."""
-        from autodocs_mcp.main import GracefulShutdown
+        from autodoc_mcp.main import GracefulShutdown
 
         shutdown_handler = GracefulShutdown()
         assert shutdown_handler.active_requests == 0
@@ -574,11 +574,11 @@ class TestMainFunctions:
     @pytest.mark.asyncio
     async def test_async_main_success(self, mocker):
         """Test successful async_main execution."""
-        from autodocs_mcp.main import async_main
+        from autodoc_mcp.main import async_main
 
-        mock_init = mocker.patch("autodocs_mcp.main.initialize_services")
-        mocker.patch("autodocs_mcp.main.run_mcp_server")
-        mock_shutdown_class = mocker.patch("autodocs_mcp.main.GracefulShutdown")
+        mock_init = mocker.patch("autodoc_mcp.main.initialize_services")
+        mocker.patch("autodoc_mcp.main.run_mcp_server")
+        mock_shutdown_class = mocker.patch("autodoc_mcp.main.GracefulShutdown")
 
         mock_init.return_value = None
         mock_server_task = mocker.AsyncMock()
@@ -607,10 +607,10 @@ class TestMainFunctions:
     @pytest.mark.asyncio
     async def test_async_main_initialization_failure(self, mocker):
         """Test async_main with service initialization failure."""
-        from autodocs_mcp.main import async_main
+        from autodoc_mcp.main import async_main
 
-        mock_init = mocker.patch("autodocs_mcp.main.initialize_services")
-        mock_shutdown_class = mocker.patch("autodocs_mcp.main.GracefulShutdown")
+        mock_init = mocker.patch("autodoc_mcp.main.initialize_services")
+        mock_shutdown_class = mocker.patch("autodoc_mcp.main.GracefulShutdown")
 
         mock_init.side_effect = Exception("Initialization failed")
 
@@ -627,10 +627,10 @@ class TestMainFunctions:
 
     def test_main_function_keyboard_interrupt(self, mocker):
         """Test main function handling KeyboardInterrupt."""
-        from autodocs_mcp.main import main
+        from autodoc_mcp.main import main
 
-        mock_run = mocker.patch("autodocs_mcp.main.asyncio.run")
-        mock_logger = mocker.patch("autodocs_mcp.main.logger")
+        mock_run = mocker.patch("autodoc_mcp.main.asyncio.run")
+        mock_logger = mocker.patch("autodoc_mcp.main.logger")
 
         mock_run.side_effect = KeyboardInterrupt()
 
@@ -640,10 +640,10 @@ class TestMainFunctions:
 
     def test_main_function_generic_exception(self, mocker):
         """Test main function handling generic exception."""
-        from autodocs_mcp.main import main
+        from autodoc_mcp.main import main
 
-        mock_run = mocker.patch("autodocs_mcp.main.asyncio.run")
-        mock_logger = mocker.patch("autodocs_mcp.main.logger")
+        mock_run = mocker.patch("autodoc_mcp.main.asyncio.run")
+        mock_logger = mocker.patch("autodoc_mcp.main.logger")
 
         mock_run.side_effect = Exception("Server error")
 

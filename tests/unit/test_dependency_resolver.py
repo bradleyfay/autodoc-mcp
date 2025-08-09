@@ -2,7 +2,7 @@
 
 import pytest
 
-from autodocs_mcp.core.dependency_resolver import (
+from autodoc_mcp.core.dependency_resolver import (
     CORE_FRAMEWORKS,
     LOW_PRIORITY_DEPS,
     WELL_DOCUMENTED,
@@ -10,7 +10,7 @@ from autodocs_mcp.core.dependency_resolver import (
     DependencySpec,
     PackageMetadata,
 )
-from autodocs_mcp.core.network_client import BasicNetworkClient
+from autodoc_mcp.core.network_client import BasicNetworkClient
 
 
 class TestDependencySpec:

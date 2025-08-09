@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from src.autodocs_mcp.core.cache_manager import FileCacheManager
-from src.autodocs_mcp.core.dependency_parser import PyProjectParser
-from src.autodocs_mcp.core.doc_fetcher import PyPIDocumentationFetcher
-from src.autodocs_mcp.core.version_resolver import VersionResolver
-from src.autodocs_mcp.exceptions import NetworkError, PackageNotFoundError
-from src.autodocs_mcp.models import PackageInfo
+from src.autodoc_mcp.core.cache_manager import FileCacheManager
+from src.autodoc_mcp.core.dependency_parser import PyProjectParser
+from src.autodoc_mcp.core.doc_fetcher import PyPIDocumentationFetcher
+from src.autodoc_mcp.core.version_resolver import VersionResolver
+from src.autodoc_mcp.exceptions import NetworkError, PackageNotFoundError
+from src.autodoc_mcp.models import PackageInfo
 
 
 @pytest.fixture
@@ -267,7 +267,7 @@ dependencies = ["requests>=2.28.0"]
 
         # Mock network failure for version resolution
         mock_client_class = mocker.patch(
-            "src.autodocs_mcp.core.version_resolver.NetworkResilientClient"
+            "src.autodoc_mcp.core.version_resolver.NetworkResilientClient"
         )
         mock_client = mocker.AsyncMock()
         mock_client.__aenter__ = mocker.AsyncMock(return_value=mock_client)
@@ -286,7 +286,7 @@ dependencies = ["requests>=2.28.0"]
         """Test recovery from package not found errors."""
         # Mock PyPI client to return 404
         mock_client_class = mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.NetworkResilientClient"
+            "src.autodoc_mcp.core.doc_fetcher.NetworkResilientClient"
         )
         mock_client = mocker.AsyncMock()
         mock_client.__aenter__ = mocker.AsyncMock(return_value=mock_client)

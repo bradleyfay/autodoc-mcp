@@ -2,7 +2,7 @@
 
 import pytest
 
-from autodocs_mcp.core.dependency_parser import PyProjectParser
+from autodoc_mcp.core.dependency_parser import PyProjectParser
 
 
 class TestPyProjectParser:

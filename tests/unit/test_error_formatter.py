@@ -4,13 +4,13 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from src.autodocs_mcp.core.error_formatter import (
+from src.autodoc_mcp.core.error_formatter import (
     ErrorFormatter,
     ErrorSeverity,
     FormattedError,
     ResponseFormatter,
 )
-from src.autodocs_mcp.exceptions import (
+from src.autodoc_mcp.exceptions import (
     NetworkError,
     PackageNotFoundError,
     ProjectParsingError,

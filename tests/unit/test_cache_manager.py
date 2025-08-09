@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from src.autodocs_mcp.core.cache_manager import FileCacheManager
-from src.autodocs_mcp.exceptions import CacheError
-from src.autodocs_mcp.models import CacheEntry, PackageInfo
+from src.autodoc_mcp.core.cache_manager import FileCacheManager
+from src.autodoc_mcp.exceptions import CacheError
+from src.autodoc_mcp.models import CacheEntry, PackageInfo
 
 
 @pytest.fixture
@@ -366,7 +366,7 @@ class TestSafeCacheOperations:
 
         # Mock sanitize_cache_key to raise exception
         with mocker.patch(
-            "src.autodocs_mcp.core.cache_manager.sanitize_cache_key",
+            "src.autodoc_mcp.core.cache_manager.sanitize_cache_key",
             side_effect=ValueError("Test error"),
         ):
             entry, errors = cache_manager.get_cached_entry_safe(cache_key)
@@ -389,7 +389,7 @@ class TestResolveAndCache:
         await cache_manager.set(cache_key, sample_package_info)
 
         mock_resolver_class = mocker.patch(
-            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+            "src.autodoc_mcp.core.version_resolver.VersionResolver"
         )
         mock_resolver = mocker.Mock()
         mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
@@ -413,7 +413,7 @@ class TestResolveAndCache:
 
         # Mock version resolver
         mock_resolver_class = mocker.patch(
-            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+            "src.autodoc_mcp.core.version_resolver.VersionResolver"
         )
         mock_resolver = mocker.Mock()
         mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
@@ -422,7 +422,7 @@ class TestResolveAndCache:
 
         # Mock fetcher
         mock_fetcher_class = mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
+            "src.autodoc_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
         )
         mock_fetcher = mocker.AsyncMock()
         mock_fetcher.fetch_package_info = mocker.AsyncMock(
@@ -450,7 +450,7 @@ class TestResolveAndCache:
     ):
         """Test resolve and cache with version resolution error."""
         mock_resolver_class = mocker.patch(
-            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+            "src.autodoc_mcp.core.version_resolver.VersionResolver"
         )
         mock_resolver = mocker.Mock()
         mock_resolver.resolve_version = mocker.AsyncMock(
@@ -468,7 +468,7 @@ class TestResolveAndCache:
 
         # Mock version resolver
         mock_resolver_class = mocker.patch(
-            "src.autodocs_mcp.core.version_resolver.VersionResolver"
+            "src.autodoc_mcp.core.version_resolver.VersionResolver"
         )
         mock_resolver = mocker.Mock()
         mock_resolver.resolve_version = mocker.AsyncMock(return_value="2.28.0")
@@ -477,7 +477,7 @@ class TestResolveAndCache:
 
         # Mock fetcher to raise error
         mock_fetcher_class = mocker.patch(
-            "src.autodocs_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
+            "src.autodoc_mcp.core.doc_fetcher.PyPIDocumentationFetcher"
         )
         mock_fetcher = mocker.AsyncMock()
         mock_fetcher.fetch_package_info = mocker.AsyncMock(
@@ -498,7 +498,7 @@ class TestEdgeCases:
         """Test that cache keys are properly sanitized."""
         # This test verifies that sanitize_cache_key is called
         mock_sanitize = mocker.patch(
-            "src.autodocs_mcp.core.cache_manager.sanitize_cache_key",
+            "src.autodoc_mcp.core.cache_manager.sanitize_cache_key",
             return_value="sanitized-key",
         )
         cache_manager.cache_dir / "sanitized-key.json"

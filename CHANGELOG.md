@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **README Documentation Accuracy**
   - Corrected development command paths (removed incorrect `src.` prefix)
-  - Fixed MCP configuration examples with proper `autodocs-mcp` entry point
+  - Fixed MCP configuration examples with proper `autodoc-mcp` entry point
   - Updated manual server startup commands for accurate troubleshooting
   - Replaced outdated integration test examples with actual script commands
 
@@ -249,5 +249,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - This release represents a complete, production-ready MCP server
 - Successfully tested with major packages: requests, pydantic, fastapi
 - Ready for integration with AI coding assistants
-- Cache directory defaults to `~/.cache/autodocs-mcp/`
+- Cache directory defaults to `~/.cache/autodoc-mcp/`
 - Supports Python 3.11+ as specified in pyproject.toml

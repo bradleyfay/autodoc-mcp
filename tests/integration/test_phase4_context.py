@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from autodocs_mcp.core.cache_manager import FileCacheManager
-from autodocs_mcp.core.context_fetcher import create_context_fetcher
-from autodocs_mcp.core.context_formatter import DocumentationContext
+from autodoc_mcp.core.cache_manager import FileCacheManager
+from autodoc_mcp.core.context_fetcher import create_context_fetcher
+from autodoc_mcp.core.context_formatter import DocumentationContext
 
 
 class TestPhase4Integration:
@@ -93,7 +93,7 @@ class TestPhase4Integration:
 
     def test_context_serialization(self):
         """Test that context can be properly serialized for MCP responses."""
-        from autodocs_mcp.core.context_formatter import PackageDocumentation
+        from autodoc_mcp.core.context_formatter import PackageDocumentation
 
         primary = PackageDocumentation(
             name="test-package",
@@ -213,7 +213,7 @@ class TestRegexPatterns:
 
     def test_bullet_point_regex_patterns(self):
         """Test that bullet point regex patterns work correctly."""
-        from autodocs_mcp.core.context_formatter import ContextDocumentationFormatter
+        from autodoc_mcp.core.context_formatter import ContextDocumentationFormatter
 
         formatter = ContextDocumentationFormatter()
 
@@ -233,7 +233,7 @@ class TestRegexPatterns:
 
     def test_class_extraction_patterns(self):
         """Test class extraction regex patterns."""
-        from autodocs_mcp.core.context_formatter import ContextDocumentationFormatter
+        from autodoc_mcp.core.context_formatter import ContextDocumentationFormatter
 
         formatter = ContextDocumentationFormatter()
 
@@ -251,7 +251,7 @@ class TestRegexPatterns:
 
     def test_function_extraction_patterns(self):
         """Test function extraction regex patterns."""
-        from autodocs_mcp.core.context_formatter import ContextDocumentationFormatter
+        from autodoc_mcp.core.context_formatter import ContextDocumentationFormatter
 
         formatter = ContextDocumentationFormatter()
 

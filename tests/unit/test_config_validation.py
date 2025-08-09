@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from autodocs_mcp.config import AutoDocsConfig
+from autodoc_mcp.config import AutoDocsConfig
 
 
 class TestAutoDocsConfigValidation:

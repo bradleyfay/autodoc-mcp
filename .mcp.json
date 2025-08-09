@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "autodocs-mcp": {
+    "autodoc-mcp": {
       "command": "uv",
-      "args": ["run", "python", "-m", "autodocs_mcp.main"],
+      "args": ["run", "python", "-m", "autodoc_mcp.main"],
       "env": {
-        "CACHE_DIR": "~/.cache/autodocs-mcp"
+        "CACHE_DIR": "~/.cache/autodoc-mcp"
       }
     }
   }

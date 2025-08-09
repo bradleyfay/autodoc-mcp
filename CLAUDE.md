@@ -145,7 +145,7 @@ uv run python scripts/dev.py clear-cache
 ### Run as MCP Server
 ```bash
 # Start the MCP server (stdio protocol)
-uv run python -m autodocs_mcp.main
+uv run python -m autodoc_mcp.main
 ```
 
 ## MCP Integration
@@ -158,7 +158,7 @@ To install this MCP server in Claude Code sessions:
 uv sync
 
 # 2. Start the MCP server (in background)
-uv run python -m autodocs_mcp.main &
+uv run python -m autodoc_mcp.main &
 
 # 3. The server will be available with these tools:
 #    - scan_dependencies: Parse project dependencies
@@ -172,12 +172,12 @@ MCP server configuration:
 ```json
 {
   "mcpServers": {
-    "autodocs-mcp": {
+    "autodoc-mcp": {
       "command": "uv",
       "args": ["run", "python", "-m", "autodocs_mcp.main"],
       "cwd": "/Users/bradleyfay/autodocs",
       "env": {
-        "CACHE_DIR": "~/.cache/autodocs-mcp"
+        "CACHE_DIR": "~/.cache/autodoc-mcp"
       }
     }
   }
@@ -186,7 +186,7 @@ MCP server configuration:
 
 ## Cache Configuration
 
-- **Default Location**: `~/.cache/autodocs-mcp/`
+- **Default Location**: `~/.cache/autodoc-mcp/`
 - **Format**: JSON files named `{package}-{version}.json`
 - **Expiration**: No time-based expiration (versions are immutable)
 - **Performance**: Instant cache hits for previously fetched versions
