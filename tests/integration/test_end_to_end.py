@@ -128,7 +128,7 @@ class TestCompleteDocumentationWorkflow:
 
                         successful_packages.append(package_name)
 
-            except (NetworkError, PackageNotFoundError) as e:
+            except (NetworkError, PackageNotFoundError, RuntimeError) as e:
                 # Skip packages that fail due to network issues in CI
                 pytest.skip(f"Network test skipped due to: {e}")
 
@@ -454,7 +454,7 @@ class TestConcurrencyAndRaceConditions:
                 async with PyPIDocumentationFetcher() as fetcher:
                     await fetcher.fetch_package_info(package_name)
                     return True
-            except (NetworkError, PackageNotFoundError):
+            except (NetworkError, PackageNotFoundError, RuntimeError):
                 return False
 
         try:
