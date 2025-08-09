@@ -568,7 +568,7 @@ class TestGetWithRetryLoggingVerification:
         client._client = mock_client
 
         mock_logger = mocker.patch("src.autodoc_mcp.core.network_client.logger")
-        mock_sleep = mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         with pytest.raises(NetworkError):
             await client.get_with_retry("https://example.com")
@@ -603,7 +603,7 @@ class TestGetWithRetryLoggingVerification:
         client._client = mock_client
 
         mock_logger = mocker.patch("src.autodoc_mcp.core.network_client.logger")
-        mock_sleep = mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         with pytest.raises(NetworkError):
             await client.get_with_retry("https://example.com")
@@ -629,7 +629,7 @@ class TestGetWithRetryLoggingVerification:
         client._client = mock_client
 
         mock_logger = mocker.patch("src.autodoc_mcp.core.network_client.logger")
-        mock_sleep = mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         with pytest.raises(NetworkError):
             await client.get_with_retry("https://example.com")
@@ -675,7 +675,7 @@ class TestAsyncContextManagerIntegration:
         )
         mock_httpx_client.return_value = mock_client_instance
 
-        mock_sleep = mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         with pytest.raises(NetworkError, match="Network error after 3 attempts"):
             async with BasicNetworkClient() as client:

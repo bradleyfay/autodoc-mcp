@@ -740,7 +740,7 @@ class TestErrorHandling:
         )
 
         # Mock concurrent fetching with mixed results
-        mock_fetch_deps = mocker.patch.object(
+        mocker.patch.object(
             context_fetcher,
             "_fetch_dependencies_concurrently",
             return_value=[
@@ -823,7 +823,7 @@ class TestPerformanceMetrics:
 
         for key in expected_keys:
             assert key in metrics
-            assert isinstance(metrics[key], (int, float))
+            assert isinstance(metrics[key], int | float)
 
         # Verify time metrics are reasonable
         assert metrics["total_time"] > 0

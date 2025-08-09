@@ -347,7 +347,7 @@ class TestCircuitBreaker:
 
     def test_state_transitions_full_cycle(self, mocker):
         """Test complete state transition cycle: closed -> open -> half_open -> closed."""
-        mock_logger = mocker.patch("src.autodoc_mcp.core.network_resilience.logger")
+        mocker.patch("src.autodoc_mcp.core.network_resilience.logger")
 
         cb = CircuitBreaker(failure_threshold=2, reset_timeout=0.1)
 
@@ -478,7 +478,7 @@ class TestRateLimiter:
     async def test_acquire_emergency_cleanup(self, mocker):
         """Test acquire performs emergency cleanup when deque is too large."""
         mock_logger = mocker.patch("src.autodoc_mcp.core.network_resilience.logger")
-        mock_sleep = mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
+        mocker.patch("asyncio.sleep", new_callable=mocker.AsyncMock)
 
         rl = RateLimiter(requests_per_minute=10)
         rl._max_entries = 20  # Small number for testing
@@ -490,9 +490,7 @@ class TestRateLimiter:
         mock_force_cleanup = mocker.patch.object(
             rl, "_force_cleanup", side_effect=mock_force_cleanup_impl
         )
-        mock_cleanup_old = mocker.patch.object(
-            rl, "_cleanup_old_requests", new_callable=mocker.AsyncMock
-        )
+        mocker.patch.object(rl, "_cleanup_old_requests", new_callable=mocker.AsyncMock)
 
         # Fill deque beyond max_entries
         current_time = time.time()
