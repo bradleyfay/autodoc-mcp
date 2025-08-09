@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autodoc-mcp"
-version = "0.3.3"
+version = "0.3.4"
 description = "MCP server for automatic Python package documentation context"
 authors = [{name = "AutoDocs Team", email = "team@autodocs.dev"}]
 license = {text = "MIT"}
