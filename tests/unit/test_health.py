@@ -340,12 +340,9 @@ class TestHealthChecker:
 
     async def test_get_readiness_status_exception(self, mocker):
         """Test readiness check handling exceptions."""
-        mocker.patch("autodocs_mcp.main.parser", side_effect=Exception("Error"))
+        mocker.patch("autodocs_mcp.main.parser", None)
         result = await self.health_checker.get_readiness_status()
 
         assert result["ready"] is False
-        # Should get either "failed" (from exception) or "Services not initialized" (from None check)
-        assert (
-            "failed" in result["reason"]
-            or "Services not initialized" in result["reason"]
-        )
+        assert "Services not initialized" in result["reason"]
+        assert "parser" in result["reason"]
