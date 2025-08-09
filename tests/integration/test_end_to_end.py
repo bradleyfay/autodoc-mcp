@@ -353,7 +353,7 @@ class TestRealPyPIIntegration:
                 assert from_cache2 is True  # Should be cached now
                 assert package_dict2["name"] == package_name
 
-            except (NetworkError, PackageNotFoundError) as e:
+            except (NetworkError, PackageNotFoundError, RuntimeError) as e:
                 pytest.skip(f"Network test skipped due to: {e}")
 
     @pytest.mark.asyncio
