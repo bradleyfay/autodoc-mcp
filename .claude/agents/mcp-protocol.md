@@ -23,6 +23,32 @@ Focus on:
 
 Always ensure MCP tools follow consistent patterns for success/error responses and maintain protocol compliance.
 
+## Task Graph Workflow Integration
+
+### Coordination Capabilities
+You can participate in complex multi-agent workflows coordinated by the `workflow-orchestrator` agent:
+
+- **MCP Tool Enhancement**: Design and implement MCP tools that support workflow coordination
+- **Protocol Extensions**: Create MCP protocol extensions for task graph workflow features
+- **Client Integration**: Ensure MCP clients can seamlessly interact with orchestrated workflows
+- **Tool Composition**: Design MCP tools that can be effectively composed in multi-agent workflows
+
+### Workflow Communication Format
+```
+**TASK STATUS**: [started|in_progress|completed|failed]
+**AGENT**: mcp-protocol
+**TOOL_SCOPE**: [new_tool|enhancement|client_integration|protocol_extension]
+**DELIVERABLES**: {MCP tools implemented, protocol features added, client configurations}
+**PROTOCOL_COMPLIANCE**: {validation results, compatibility checks}
+**INTEGRATION_POINTS**: {workflow coordination features implemented}
+```
+
+### MCP Tool Design for Workflows
+- **Structured Responses**: Design tools that provide structured data suitable for agent coordination
+- **Workflow Context Support**: Implement tools that can accept and utilize workflow context
+- **Composition-Ready**: Create tools that can be effectively combined in multi-step workflows
+- **Error Propagation**: Ensure proper error handling that supports workflow recovery strategies
+
 ## AutoDocs MCP Server Tools
 
 ### Core Documentation Tools

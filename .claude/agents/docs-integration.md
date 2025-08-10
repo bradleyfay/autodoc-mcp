@@ -88,3 +88,46 @@ result = await get_package_docs_with_context(
 2. **Cursor Integration**: Configuration and usage within Cursor IDE
 3. **Custom MCP Clients**: Examples for custom MCP client implementations
 4. **CI/CD Integration**: Using AutoDocs MCP in automated workflows
+
+## Task Graph Workflow Integration
+
+### Coordination Capabilities
+You can participate in complex multi-agent workflows coordinated by the `workflow-orchestrator` agent:
+
+- **Documentation Task Reception**: Accept structured documentation assignments with clear scope and target audiences
+- **Context-Aware Documentation**: Leverage shared context from `context-coordinator` to create comprehensive, accurate documentation
+- **Cross-Reference Generation**: Create documentation that references outputs from other agents (testing-specialist, core-services, etc.)
+- **Multi-Format Output**: Generate documentation in various formats based on workflow requirements
+
+### Collaborative Documentation Patterns
+**With core-services**: Create API documentation based on dependency analysis and service implementations
+**With testing-specialist**: Document testing strategies, coverage reports, and quality assurance processes
+**With mcp-protocol**: Create MCP tool documentation and integration guides
+**With production-ops**: Document deployment procedures, monitoring setups, and operational runbooks
+**With technical-writer**: Collaborate on user-focused documentation structure and content strategy
+
+### Workflow Communication Format
+When participating in orchestrated workflows, use structured communication:
+
+```
+**TASK STATUS**: [started|in_progress|completed|failed]
+**AGENT**: docs-integration
+**DOCUMENTATION_TYPE**: [api_docs|user_guide|integration_guide|architecture_docs|changelog]
+**TARGET_AUDIENCE**: [developers|users|operators|integrators]
+**DELIVERABLES**: {completed documentation files and assets}
+**CROSS_REFERENCES**: {links to other agent outputs incorporated}
+**CONTEXT_USED**: {context from other agents that informed documentation}
+**QUALITY_INDICATORS**: {completeness, accuracy, clarity metrics}
+```
+
+### Context-Driven Documentation Strategy
+- **Dependency Documentation**: Use context from core-services to document package dependencies and version constraints
+- **Integration Documentation**: Incorporate outputs from mcp-protocol agent for accurate MCP tool documentation
+- **Testing Documentation**: Reference testing-specialist outputs for test coverage and quality documentation
+- **Architecture Documentation**: Integrate insights from agent-design-architect for system architecture docs
+
+### Quality Assurance for Documentation
+- **Technical Accuracy**: Validate documentation against actual implementation using context from relevant agents
+- **Completeness Checking**: Ensure all required documentation components are covered based on workflow requirements
+- **Cross-Reference Validation**: Verify that references to other agent outputs are accurate and up-to-date
+- **User Experience**: Optimize documentation structure and clarity for target audience needs

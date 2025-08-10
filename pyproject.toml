@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autodoc-mcp"
-version = "0.4.2"
+version = "0.5.0"
 description = "MCP server for automatic Python package documentation context"
 authors = [{name = "AutoDocs Team", email = "team@autodocs.dev"}]
 license = {text = "MIT"}
@@ -113,5 +113,11 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-blog-plugin>=0.25",
+    "mkdocs-git-committers-plugin>=0.2.3",
+    "mkdocs-git-revision-date-localized-plugin>=1.4.7",
+    "mkdocs-material>=9.6.16",
+    "mkdocs-minify-plugin>=0.8.0",
     "pytest-timeout>=2.4.0",
 ]
