@@ -5,6 +5,23 @@ All notable changes to the AutoDocs MCP Server project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-08-10
+
+### Added
+- **Comprehensive Documentation Site**
+  - **Multi-Path Architecture**: Three distinct documentation paths for different user types
+    - Product Documentation: End users and integrators
+    - Development Process: Contributors and technical reviewers
+    - Development Journey: AI-development enthusiasts and learners
+  - **MkDocs with Material Theme**: Modern, responsive design with dark/light mode toggle
+  - **GitHub Pages Deployment**: Automatic deployment via GitHub Actions
+  - **Custom Styling**: Path-specific color coding and branding
+  - **Complete Content Structure**: 20+ documentation pages covering all aspects of the project
+
+- **Development Dependencies**
+  - Added MkDocs and Material theme with useful plugins for documentation generation
+  - Added git-based plugins for revision tracking and contributor information
+
 ## [0.4.2] - 2025-08-10
 
 ### Fixed
