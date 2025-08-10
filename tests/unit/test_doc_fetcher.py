@@ -69,25 +69,25 @@ class TestPyPIDocumentationFetcher:
     @pytest.fixture
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            return PyPIDocumentationFetcher()
+        )
+        return PyPIDocumentationFetcher()
 
     @pytest.mark.asyncio
     async def test_context_manager_initialization(self, fetcher, mocker):
         """Test async context manager properly initializes client."""
         mock_client = mocker.AsyncMock()
 
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.NetworkResilientClient",
             return_value=mock_client,
-        ):
-            async with fetcher:
-                assert fetcher._resilient_client is mock_client
-                mock_client.__aenter__.assert_called_once()
+        )
+        async with fetcher:
+            assert fetcher._resilient_client is mock_client
+            mock_client.__aenter__.assert_called_once()
 
-            mock_client.__aexit__.assert_called_once()
+        mock_client.__aexit__.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_fetch_package_info_success(
@@ -285,19 +285,19 @@ class TestDocumentationFormatting:
     @pytest.fixture
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            return PyPIDocumentationFetcher()
+        )
+        return PyPIDocumentationFetcher()
 
     def test_format_documentation_basic(
         self, fetcher, sample_package_info, mock_config, mocker
     ):
         """Test basic documentation formatting."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            formatted = fetcher.format_documentation(sample_package_info)
+        )
+        formatted = fetcher.format_documentation(sample_package_info)
 
         # Check basic structure
         assert "# requests v2.28.0" in formatted
@@ -311,12 +311,10 @@ class TestDocumentationFormatting:
         self, fetcher, sample_package_info, mock_config, mocker
     ):
         """Test documentation formatting with query filtering."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            formatted = fetcher.format_documentation(
-                sample_package_info, query="http web"
-            )
+        )
+        formatted = fetcher.format_documentation(sample_package_info, query="http web")
 
         # Query filtering returns sections that match the query terms
         # Since "http" is in the keywords, should return relevant content
@@ -346,10 +344,10 @@ class TestDocumentationFormatting:
         # Set small max size for testing
         mock_config.max_documentation_size = 1000
 
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            formatted = fetcher.format_documentation(long_package)
+        )
+        formatted = fetcher.format_documentation(long_package)
 
         # Should be truncated
         assert len(formatted) <= 1100  # Allow some buffer for truncation message
@@ -383,10 +381,10 @@ class TestPyPIResponseParsing:
     @pytest.fixture
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            return PyPIDocumentationFetcher()
+        )
+        return PyPIDocumentationFetcher()
 
     def test_parse_pypi_response_valid(self, fetcher, sample_pypi_response):
         """Test parsing valid PyPI response."""
@@ -480,10 +478,10 @@ class TestQueryFiltering:
     @pytest.fixture
     def fetcher(self, mock_config, mocker):
         """Create fetcher instance with mocked config."""
-        with mocker.patch(
+        mocker.patch(
             "src.autodoc_mcp.core.doc_fetcher.get_config", return_value=mock_config
-        ):
-            return PyPIDocumentationFetcher()
+        )
+        return PyPIDocumentationFetcher()
 
     def test_apply_query_filter_basic(self, fetcher):
         """Test basic query filtering functionality."""

@@ -407,105 +407,107 @@ async def get_package_docs_with_context(
                 },
             }
 
-    try:
-        # Validate inputs
-        validated_package_name = InputValidator.validate_package_name(package_name)
-        if version_constraint is not None:
-            validated_constraint = InputValidator.validate_version_constraint(
-                version_constraint
+        try:
+            # Validate inputs
+            validated_package_name = InputValidator.validate_package_name(package_name)
+            if version_constraint is not None:
+                validated_constraint = InputValidator.validate_version_constraint(
+                    version_constraint
+                )
+            else:
+                validated_constraint = None
+
+            logger.info(
+                "Fetching package context",
+                package=validated_package_name,
+                constraint=validated_constraint,
+                include_deps=include_dependencies,
+                scope=context_scope,
             )
-        else:
-            validated_constraint = None
 
-        logger.info(
-            "Fetching package context",
-            package=validated_package_name,
-            constraint=validated_constraint,
-            include_deps=include_dependencies,
-            scope=context_scope,
-        )
+            # Fetch comprehensive context
+            context, performance_metrics = await context_fetcher.fetch_package_context(
+                package_name=validated_package_name,
+                version_constraint=validated_constraint,
+                include_dependencies=include_dependencies,
+                context_scope=context_scope,
+                max_dependencies=max_dependencies,
+                max_tokens=max_tokens,
+            )
 
-        # Fetch comprehensive context
-        context, performance_metrics = await context_fetcher.fetch_package_context(
-            package_name=validated_package_name,
-            version_constraint=validated_constraint,
-            include_dependencies=include_dependencies,
-            context_scope=context_scope,
-            max_dependencies=max_dependencies,
-            max_tokens=max_tokens,
-        )
+            # Convert to serializable format
+            context_data = {
+                "primary_package": context.primary_package.model_dump(),
+                "runtime_dependencies": [
+                    dep.model_dump() for dep in context.runtime_dependencies
+                ],
+                "dev_dependencies": [
+                    dep.model_dump() for dep in context.dev_dependencies
+                ],
+                "context_scope": context.context_scope,
+                "total_packages": context.total_packages,
+                "truncated_packages": context.truncated_packages,
+                "token_estimate": context.token_estimate,
+            }
 
-        # Convert to serializable format
-        context_data = {
-            "primary_package": context.primary_package.model_dump(),
-            "runtime_dependencies": [
-                dep.model_dump() for dep in context.runtime_dependencies
-            ],
-            "dev_dependencies": [dep.model_dump() for dep in context.dev_dependencies],
-            "context_scope": context.context_scope,
-            "total_packages": context.total_packages,
-            "truncated_packages": context.truncated_packages,
-            "token_estimate": context.token_estimate,
-        }
+            # Record successful metrics
+            cache_hit_rate = performance_metrics.get("cache_hits", 0) / max(
+                1,
+                performance_metrics.get("cache_hits", 0)
+                + performance_metrics.get("cache_misses", 1),
+            )
+            get_metrics_collector().finish_request(
+                metrics.request_id,
+                success=True,
+                cache_hit=(cache_hit_rate > 0.5),
+                package_name=validated_package_name,
+                dependency_count=context.total_packages - 1,  # Exclude primary package
+            )
 
-        # Record successful metrics
-        cache_hit_rate = performance_metrics.get("cache_hits", 0) / max(
-            1,
-            performance_metrics.get("cache_hits", 0)
-            + performance_metrics.get("cache_misses", 1),
-        )
-        get_metrics_collector().finish_request(
-            metrics.request_id,
-            success=True,
-            cache_hit=(cache_hit_rate > 0.5),
-            package_name=validated_package_name,
-            dependency_count=context.total_packages - 1,  # Exclude primary package
-        )
+            return {
+                "success": True,
+                "context": context_data,
+                "performance": performance_metrics,
+            }
 
-        return {
-            "success": True,
-            "context": context_data,
-            "performance": performance_metrics,
-        }
-
-    except AutoDocsError as e:
-        logger.error(
-            "Context fetch failed",
-            package=validated_package_name,
-            error=str(e),
-            error_type=type(e).__name__,
-        )
-        get_metrics_collector().finish_request(
-            metrics.request_id,
-            success=False,
-            error_type="AutoDocsError",
-            package_name=package_name,
-        )
-        return {
-            "success": False,
-            "error": {"type": type(e).__name__, "message": str(e)},
-        }
-    except Exception as e:
-        formatted_error = ErrorFormatter.format_exception(
-            e, {"package": validated_package_name}
-        )
-        logger.error("Unexpected error during context fetch", error=str(e))
-        get_metrics_collector().finish_request(
-            metrics.request_id,
-            success=False,
-            error_type=type(e).__name__,
-            package_name=package_name,
-        )
-        return {
-            "success": False,
-            "error": {
-                "message": formatted_error.message,
-                "suggestion": formatted_error.suggestion,
-                "severity": formatted_error.severity.value,
-                "code": formatted_error.error_code,
-                "recoverable": formatted_error.recoverable,
-            },
-        }
+        except AutoDocsError as e:
+            logger.error(
+                "Context fetch failed",
+                package=validated_package_name,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            get_metrics_collector().finish_request(
+                metrics.request_id,
+                success=False,
+                error_type="AutoDocsError",
+                package_name=package_name,
+            )
+            return {
+                "success": False,
+                "error": {"type": type(e).__name__, "message": str(e)},
+            }
+        except Exception as e:
+            formatted_error = ErrorFormatter.format_exception(
+                e, {"package": validated_package_name}
+            )
+            logger.error("Unexpected error during context fetch", error=str(e))
+            get_metrics_collector().finish_request(
+                metrics.request_id,
+                success=False,
+                error_type=type(e).__name__,
+                package_name=package_name,
+            )
+            return {
+                "success": False,
+                "error": {
+                    "message": formatted_error.message,
+                    "suggestion": formatted_error.suggestion,
+                    "severity": formatted_error.severity.value,
+                    "code": formatted_error.error_code,
+                    "recoverable": formatted_error.recoverable,
+                },
+            }
 
 
 @mcp.tool

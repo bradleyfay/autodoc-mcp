@@ -314,13 +314,12 @@ class TestHealthChecker:
 
     async def test_get_readiness_status_ready(self, mocker):
         """Test readiness check when all services ready."""
-        with (
-            mocker.patch("autodoc_mcp.main.parser", mocker.MagicMock()),
-            mocker.patch("autodoc_mcp.main.cache_manager", mocker.MagicMock()),
-            mocker.patch("autodoc_mcp.main.version_resolver", mocker.MagicMock()),
-            mocker.patch("autodoc_mcp.main.context_fetcher", mocker.MagicMock()),
-        ):
-            result = await self.health_checker.get_readiness_status()
+        mocker.patch("autodoc_mcp.main.parser", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.cache_manager", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.version_resolver", mocker.MagicMock())
+        mocker.patch("autodoc_mcp.main.context_fetcher", mocker.MagicMock())
+
+        result = await self.health_checker.get_readiness_status()
 
         assert result["ready"] is True
         assert "timestamp" in result

@@ -262,11 +262,12 @@ class TestCacheManagement:
     async def test_list_cached_packages_os_error(self, cache_manager, mocker):
         """Test listing cached packages with OS error."""
         # Mock glob to raise OSError
-        with mocker.patch.object(
+        mock_glob = mocker.patch.object(
             Path, "glob", side_effect=OSError("Permission denied")
-        ):
-            packages = await cache_manager.list_cached_packages()
-            assert packages == []
+        )
+        packages = await cache_manager.list_cached_packages()
+        assert packages == []
+        mock_glob.assert_called_once_with("*.json")
 
     @pytest.mark.asyncio
     async def test_get_cache_stats_success(self, cache_manager, sample_package_info):
@@ -294,11 +295,12 @@ class TestCacheManagement:
     async def test_get_cache_stats_os_error(self, cache_manager, mocker):
         """Test getting cache statistics with OS error."""
         # Mock glob to raise OSError
-        with mocker.patch.object(
+        mock_glob = mocker.patch.object(
             Path, "glob", side_effect=OSError("Permission denied")
-        ):
-            stats = await cache_manager.get_cache_stats()
-            assert "error" in stats
+        )
+        stats = await cache_manager.get_cache_stats()
+        assert "error" in stats
+        mock_glob.assert_called_once_with("*.json")
 
 
 class TestSafeCacheOperations:
@@ -365,15 +367,16 @@ class TestSafeCacheOperations:
         cache_key = "error-key"
 
         # Mock sanitize_cache_key to raise exception
-        with mocker.patch(
+        mock_sanitize = mocker.patch(
             "src.autodoc_mcp.core.cache_manager.sanitize_cache_key",
             side_effect=ValueError("Test error"),
-        ):
-            entry, errors = cache_manager.get_cached_entry_safe(cache_key)
+        )
+        entry, errors = cache_manager.get_cached_entry_safe(cache_key)
 
         assert entry is None
         assert len(errors) == 1
         assert errors[0].error_code is not None
+        mock_sanitize.assert_called_once_with(cache_key)
 
 
 class TestResolveAndCache:

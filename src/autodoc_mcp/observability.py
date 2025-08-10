@@ -106,11 +106,30 @@ class MetricsCollector:
 
         durations = [r.duration_ms for r in self.completed_requests]
 
-        # Calculate percentiles
+        # Calculate percentiles using proper statistical methods
         sorted_durations = sorted(durations)
-        p50_idx = max(0, int(0.5 * len(sorted_durations)) - 1)
-        p95_idx = max(0, int(0.95 * len(sorted_durations)) - 1)
-        p99_idx = max(0, int(0.99 * len(sorted_durations)) - 1)
+        n = len(sorted_durations)
+
+        def percentile(values: list[float], p: float) -> float:
+            """Calculate the p-th percentile of values."""
+            if not values:
+                return 0.0
+
+            # Use linear interpolation method (R-7 quantile method)
+            index = (n - 1) * p
+            lower_idx = int(index)
+            upper_idx = min(lower_idx + 1, n - 1)
+
+            if lower_idx == upper_idx:
+                return values[lower_idx]
+
+            # Interpolate between lower and upper values
+            weight = index - lower_idx
+            return values[lower_idx] * (1 - weight) + values[upper_idx] * weight
+
+        p50_ms = percentile(sorted_durations, 0.5)
+        p95_ms = percentile(sorted_durations, 0.95)
+        p99_ms = percentile(sorted_durations, 0.99)
 
         # Operation breakdown
         operations = {}
@@ -146,9 +165,9 @@ class MetricsCollector:
             "operations": operations,
             "response_times": {
                 "avg_ms": round(sum(durations) / len(durations), 2),
-                "p50_ms": round(sorted_durations[p50_idx], 2),
-                "p95_ms": round(sorted_durations[p95_idx], 2),
-                "p99_ms": round(sorted_durations[p99_idx], 2),
+                "p50_ms": round(p50_ms, 2),
+                "p95_ms": round(p95_ms, 2),
+                "p99_ms": round(p99_ms, 2),
                 "min_ms": round(min(durations), 2),
                 "max_ms": round(max(durations), 2),
             },

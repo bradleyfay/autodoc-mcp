@@ -105,6 +105,18 @@ class TestValidatePyPIURL:
         result = validate_pypi_url(url_with_whitespace)
         assert result == "https://pypi.org/pypi"
 
+    def test_unexpected_parsing_errors(self, mocker):
+        """Test handling of unexpected parsing errors."""
+        # Mock urlparse to raise an unexpected exception
+        mock_exception = RuntimeError("Unexpected parsing error")
+        mocker.patch("src.autodoc_mcp.security.urlparse", side_effect=mock_exception)
+
+        with pytest.raises(
+            ValueError,
+            match="Invalid PyPI URL 'https://pypi.org/pypi': Unexpected parsing error",
+        ):
+            validate_pypi_url("https://pypi.org/pypi")
+
 
 class TestSanitizeCacheKey:
     """Test cache key sanitization."""
@@ -285,3 +297,13 @@ class TestInputValidator:
 
         with pytest.raises(ValueError, match="Project path must be a non-empty string"):
             InputValidator.validate_project_path(None)
+
+    def test_validate_project_path_os_error(self, mocker):
+        """Test handling of OS errors during path resolution."""
+        # Mock Path.resolve to raise an OSError
+        mocker.patch("pathlib.Path.resolve", side_effect=OSError("Permission denied"))
+
+        with pytest.raises(
+            ValueError, match="Invalid project path '/some/path': Permission denied"
+        ):
+            InputValidator.validate_project_path("/some/path")

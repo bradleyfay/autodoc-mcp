@@ -128,9 +128,15 @@ class TestCompleteDocumentationWorkflow:
 
                         successful_packages.append(package_name)
 
-            except (NetworkError, PackageNotFoundError, RuntimeError) as e:
+            except (NetworkError, PackageNotFoundError) as e:
                 # Skip packages that fail due to network issues in CI
                 pytest.skip(f"Network test skipped due to: {e}")
+            except RuntimeError as e:
+                # Only skip if it's an event loop issue, otherwise re-raise
+                if "Event loop is closed" in str(e):
+                    pytest.skip(f"Network test skipped due to: {e}")
+                else:
+                    raise
 
         # Verify at least one package was processed successfully
         assert len(successful_packages) > 0
@@ -215,8 +221,14 @@ dependencies = ["requests>=2.28.0"]
                 # Verify result
                 assert package_dict["name"] == dependency.name
 
-        except (NetworkError, PackageNotFoundError, RuntimeError) as e:
+        except (NetworkError, PackageNotFoundError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
+        except RuntimeError as e:
+            # Only skip if it's an event loop issue, otherwise re-raise
+            if "Event loop is closed" in str(e):
+                pytest.skip(f"Network test skipped due to: {e}")
+            else:
+                raise
 
         elapsed_time = time.time() - start_time
 
@@ -353,8 +365,14 @@ class TestRealPyPIIntegration:
                 assert from_cache2 is True  # Should be cached now
                 assert package_dict2["name"] == package_name
 
-            except (NetworkError, PackageNotFoundError, RuntimeError) as e:
+            except (NetworkError, PackageNotFoundError) as e:
                 pytest.skip(f"Network test skipped due to: {e}")
+            except RuntimeError as e:
+                # Only skip if it's an event loop issue, otherwise re-raise
+                if "Event loop is closed" in str(e):
+                    pytest.skip(f"Network test skipped due to: {e}")
+                else:
+                    raise
 
     @pytest.mark.asyncio
     async def test_real_pypi_documentation_formatting(self):
@@ -377,8 +395,14 @@ class TestRealPyPIIntegration:
                 assert len(filtered) > 0
                 assert "http" in filtered.lower()
 
-        except (NetworkError, PackageNotFoundError, RuntimeError) as e:
+        except (NetworkError, PackageNotFoundError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
+        except RuntimeError as e:
+            # Only skip if it's an event loop issue, otherwise re-raise
+            if "Event loop is closed" in str(e):
+                pytest.skip(f"Network test skipped due to: {e}")
+            else:
+                raise
 
     @pytest.mark.asyncio
     async def test_real_pypi_error_handling(self):
@@ -454,8 +478,14 @@ class TestConcurrencyAndRaceConditions:
                 async with PyPIDocumentationFetcher() as fetcher:
                     await fetcher.fetch_package_info(package_name)
                     return True
-            except (NetworkError, PackageNotFoundError, RuntimeError):
+            except (NetworkError, PackageNotFoundError):
                 return False
+            except RuntimeError as e:
+                # Only return False for event loop issues, otherwise re-raise
+                if "Event loop is closed" in str(e):
+                    return False
+                else:
+                    raise
 
         try:
             # Run multiple concurrent fetches

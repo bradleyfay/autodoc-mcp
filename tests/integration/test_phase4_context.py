@@ -7,11 +7,13 @@ import pytest
 from autodoc_mcp.core.cache_manager import FileCacheManager
 from autodoc_mcp.core.context_fetcher import create_context_fetcher
 from autodoc_mcp.core.context_formatter import DocumentationContext
+from autodoc_mcp.exceptions import NetworkError, PackageNotFoundError
 
 
 class TestPhase4Integration:
     """Integration tests for complete Phase 4 functionality."""
 
+    @pytest.mark.asyncio
     async def test_context_fetcher_creation(self):
         """Test that context fetcher can be created properly."""
         cache_manager = FileCacheManager(Path("/tmp/test-cache"))
@@ -24,6 +26,7 @@ class TestPhase4Integration:
         assert context_fetcher.dependency_resolver is not None
         assert context_fetcher.formatter is not None
 
+    @pytest.mark.asyncio
     async def test_fetch_primary_only_context(self):
         """Test fetching context without dependencies."""
         # This test would normally require network access
@@ -50,10 +53,17 @@ class TestPhase4Integration:
             assert context.token_estimate > 0
             assert metrics["total_time"] > 0
 
-        except Exception as e:
+        except (NetworkError, PackageNotFoundError) as e:
             # Skip test if network/PyPI is unavailable
             pytest.skip(f"Network test skipped due to: {e}")
+        except RuntimeError as e:
+            # Only skip if it's an event loop issue, otherwise re-raise
+            if "Event loop is closed" in str(e):
+                pytest.skip(f"Network test skipped due to: {e}")
+            else:
+                raise
 
+    @pytest.mark.asyncio
     async def test_fetch_context_with_dependencies(self):
         """Test fetching context with dependencies (network dependent)."""
         cache_manager = FileCacheManager(Path("/tmp/test-cache-deps"))
@@ -88,8 +98,14 @@ class TestPhase4Integration:
             assert "cache_hits" in metrics
             assert "cache_misses" in metrics
 
-        except Exception as e:
+        except (NetworkError, PackageNotFoundError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
+        except RuntimeError as e:
+            # Only skip if it's an event loop issue, otherwise re-raise
+            if "Event loop is closed" in str(e):
+                pytest.skip(f"Network test skipped due to: {e}")
+            else:
+                raise
 
     def test_context_serialization(self):
         """Test that context can be properly serialized for MCP responses."""
@@ -135,6 +151,7 @@ class TestPhase4Integration:
 class TestContextFetcherErrorHandling:
     """Test error handling and graceful degradation."""
 
+    @pytest.mark.asyncio
     async def test_fetch_context_invalid_package(self):
         """Test handling of invalid package names."""
         cache_manager = FileCacheManager(Path("/tmp/test-cache-invalid"))
@@ -153,6 +170,7 @@ class TestContextFetcherErrorHandling:
             # Should handle gracefully - might raise exception or return error context
             # Implementation depends on error handling strategy
 
+    @pytest.mark.asyncio
     async def test_fetch_context_with_network_timeout(self):
         """Test handling of network timeouts."""
         # This would require mocking network delays
@@ -171,6 +189,7 @@ class TestContextFetcherErrorHandling:
 class TestCacheManagerIntegration:
     """Test cache manager integration with context system."""
 
+    @pytest.mark.asyncio
     async def test_cache_manager_resolve_and_cache(self):
         """Test the resolve_and_cache method used by context fetcher."""
         cache_manager = FileCacheManager(Path("/tmp/test-resolve-cache"))
@@ -191,9 +210,16 @@ class TestCacheManagerIntegration:
             assert from_cache2 is True  # Should be from cache
             assert package_info["name"] == package_info2["name"]
 
-        except Exception as e:
+        except (NetworkError, PackageNotFoundError) as e:
             pytest.skip(f"Network test skipped due to: {e}")
+        except RuntimeError as e:
+            # Only skip if it's an event loop issue, otherwise re-raise
+            if "Event loop is closed" in str(e):
+                pytest.skip(f"Network test skipped due to: {e}")
+            else:
+                raise
 
+    @pytest.mark.asyncio
     async def test_cache_directory_creation(self):
         """Test that cache directories are created properly."""
         import tempfile

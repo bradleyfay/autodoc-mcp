@@ -567,14 +567,21 @@ class TestConcurrentDependencyFetching:
     ):
         """Test concurrent fetching with timeout."""
 
-        # Mock fetch to simulate timeout by raising TimeoutError
-        async def timeout_fetch(*args, **kwargs):
-            raise TimeoutError("Simulated timeout")
+        # Mock asyncio.wait_for to simulate timeout
+        original_wait_for = asyncio.wait_for
 
+        async def timeout_wait_for(coro, timeout=None):
+            if timeout == 15.0:  # Our specific timeout
+                raise TimeoutError("Simulated timeout")
+            return await original_wait_for(coro, timeout)
+
+        mocker.patch("asyncio.wait_for", side_effect=timeout_wait_for)
+
+        # Mock single dependency fetch to return something if called
         mocker.patch.object(
             context_fetcher,
             "_fetch_single_dependency_with_semaphore",
-            side_effect=timeout_fetch,
+            return_value=mocker.Mock(),
         )
 
         dependency_names = ["slow-package"]
@@ -644,6 +651,31 @@ class TestConcurrentDependencyFetching:
         context_fetcher.formatter.format_dependency_package.assert_called_once_with(
             sample_package_info, "requests"
         )
+
+    @pytest.mark.asyncio
+    async def test_fetch_single_dependency_cache_miss(
+        self, context_fetcher, sample_package_info, sample_dependency_docs, mocker
+    ):
+        """Test fetching single dependency with cache miss."""
+        # Setup mocks - cache miss (second parameter False)
+        context_fetcher.cache_manager.resolve_and_cache = mocker.AsyncMock(
+            return_value=(sample_package_info, False)
+        )
+        context_fetcher.formatter.format_dependency_package.return_value = (
+            sample_dependency_docs
+        )
+
+        performance_metrics = {"cache_hits": 0, "cache_misses": 0}
+
+        # Execute
+        result = await context_fetcher._fetch_single_dependency(
+            "urllib3", "requests", performance_metrics
+        )
+
+        # Verify result and cache miss is tracked
+        assert result == sample_dependency_docs
+        assert performance_metrics["cache_misses"] == 1
+        assert performance_metrics["cache_hits"] == 0
 
     @pytest.mark.asyncio
     async def test_fetch_single_dependency_failure(self, context_fetcher, mocker):

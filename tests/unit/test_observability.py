@@ -1,7 +1,6 @@
 """Tests for observability and metrics system."""
 
 import time
-import unittest.mock
 
 import pytest
 
@@ -193,37 +192,33 @@ class TestMetricsCollector:
         assert stats["success_rate"] == 0.0
         assert stats["operations"] == {}
 
-    @pytest.mark.skip(
-        "Complex time mocking issue - percentile calculation test needs refactoring"
-    )
-    def test_get_stats_with_requests(self):
+    def test_get_stats_with_requests(self, mocker):
         """Test getting stats with completed requests."""
-        # Add some test requests
+        # Add some test requests with explicit timing
         requests_data = [
-            ("req-1", "scan_deps", True, True, 100.0),  # Success, cache hit
-            ("req-2", "get_docs", True, False, 200.0),  # Success, no cache
-            ("req-3", "scan_deps", False, False, 50.0),  # Failure
-            ("req-4", "get_docs", True, True, 150.0),  # Success, cache hit
+            ("req-1", "scan_deps", True, True, 1000.0, 1000.1),  # 100ms
+            ("req-2", "get_docs", True, False, 1000.0, 1000.2),  # 200ms
+            ("req-3", "scan_deps", False, False, 1000.0, 1000.05),  # 50ms
+            ("req-4", "get_docs", True, True, 1000.0, 1000.15),  # 150ms
         ]
 
-        # Mock time.time() to return predictable values
-        current_time = 1000.0
-        time_values = []
+        # Create metrics manually with controlled timing
+        for (
+            req_id,
+            operation,
+            success,
+            cache_hit,
+            start_time,
+            end_time,
+        ) in requests_data:
+            metrics = RequestMetrics(
+                request_id=req_id, operation=operation, start_time=start_time
+            )
+            metrics.end_time = end_time
+            metrics.success = success
+            metrics.cache_hit = cache_hit
 
-        for _req_id, _operation, _success, _cache_hit, duration_ms in requests_data:
-            # Start time for this request
-            time_values.append(current_time)
-            # End time for this request
-            time_values.append(current_time + (duration_ms / 1000.0))
-
-        with unittest.mock.patch(
-            "autodoc_mcp.observability.time.time", side_effect=time_values
-        ):
-            for req_id, operation, success, cache_hit, _duration_ms in requests_data:
-                self.collector.start_request(req_id, operation)
-                self.collector.finish_request(
-                    req_id, success=success, cache_hit=cache_hit
-                )
+            self.collector.completed_requests.append(metrics)
 
         stats = self.collector.get_stats()
 
