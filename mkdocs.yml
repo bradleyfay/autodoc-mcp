@@ -1,0 +1,119 @@
+site_name: AutoDocs MCP Server
+site_description: Intelligent documentation context provider for AI assistants
+site_author: Bradley Fay
+repo_url: https://github.com/bradleyfay/autodoc-mcp
+repo_name: bradleyfay/autodoc-mcp
+
+nav:
+  - Home: index.md
+  - 📚 Product Documentation:
+    - product/index.md
+    - Getting Started: product/getting-started.md
+    - Installation: product/installation.md
+    - MCP Tools: product/mcp-tools.md
+    - Configuration: product/configuration.md
+    - Troubleshooting: product/troubleshooting.md
+    - API Reference: product/api-reference.md
+  - 🏗️ Development Process:
+    - development/index.md
+    - Architecture: development/architecture.md
+    - Development Standards: development/standards.md
+    - Testing Strategy: development/testing.md
+    - Contributing: development/contributing.md
+    - Technical Decisions: development/technical-decisions.md
+  - 📖 Development Journey:
+    - journey/index.md
+    - Project Evolution: journey/evolution.md
+    - Phase Completions:
+      - journey/phases/phase-1-core-validation.md
+      - journey/phases/phase-2-documentation-fetching.md
+      - journey/phases/phase-3-network-resilience.md
+      - journey/phases/phase-4-dependency-context.md
+    - Technical Learnings: journey/learnings.md
+    - Development Sessions: journey/sessions.md
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+
+plugins:
+  - search:
+      lang: en
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+  - git-committers:
+      repository: bradleyfay/autodoc-mcp
+      branch: main
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+      cache_safe: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - abbr
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.emoji
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bradleyfay/autodoc-mcp
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/autodoc-mcp/
+
+extra_css:
+  - stylesheets/extra.css
+
+copyright: Copyright &copy; 2025 Bradley Fay - <a href="#__consent">Change cookie settings</a>
