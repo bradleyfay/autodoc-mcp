@@ -70,7 +70,7 @@ class TestCompleteDocumentationWorkflow:
     """Test complete end-to-end documentation workflow."""
 
     @pytest.mark.skipif(
-        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        bool(os.getenv("CI")) or bool(os.getenv("GITHUB_ACTIONS")),
         reason="Skip network tests in CI environment",
     )
     @pytest.mark.asyncio
@@ -189,7 +189,7 @@ class TestCompleteDocumentationWorkflow:
             assert "2.28.0" in formatted_docs
 
     @pytest.mark.skipif(
-        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        bool(os.getenv("CI")) or bool(os.getenv("GITHUB_ACTIONS")),
         reason="Skip network tests in CI environment",
     )
     @pytest.mark.asyncio
@@ -347,7 +347,7 @@ class TestRealPyPIIntegration:
     """Test integration with real PyPI API (network-dependent)."""
 
     @pytest.mark.skipif(
-        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        bool(os.getenv("CI")) or bool(os.getenv("GITHUB_ACTIONS")),
         reason="Skip network tests in CI environment",
     )
     @pytest.mark.asyncio
@@ -388,7 +388,7 @@ class TestRealPyPIIntegration:
                     raise
 
     @pytest.mark.skipif(
-        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        bool(os.getenv("CI")) or bool(os.getenv("GITHUB_ACTIONS")),
         reason="Skip network tests in CI environment",
     )
     @pytest.mark.asyncio
