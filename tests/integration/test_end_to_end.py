@@ -1,6 +1,7 @@
 """Integration tests for end-to-end workflows."""
 
 import asyncio
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -68,6 +69,10 @@ dependencies = [
 class TestCompleteDocumentationWorkflow:
     """Test complete end-to-end documentation workflow."""
 
+    @pytest.mark.skipif(
+        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        reason="Skip network tests in CI environment",
+    )
     @pytest.mark.asyncio
     async def test_complete_workflow_success(
         self, temp_project_dir, temp_cache_dir, sample_pyproject_toml
@@ -183,6 +188,10 @@ class TestCompleteDocumentationWorkflow:
             assert "requests" in formatted_docs
             assert "2.28.0" in formatted_docs
 
+    @pytest.mark.skipif(
+        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        reason="Skip network tests in CI environment",
+    )
     @pytest.mark.asyncio
     async def test_workflow_performance_requirements(
         self, temp_project_dir, temp_cache_dir
@@ -337,6 +346,10 @@ dependencies = ["requests>=2.28.0"]
 class TestRealPyPIIntegration:
     """Test integration with real PyPI API (network-dependent)."""
 
+    @pytest.mark.skipif(
+        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        reason="Skip network tests in CI environment",
+    )
     @pytest.mark.asyncio
     async def test_real_pypi_popular_packages(self, temp_cache_dir):
         """Test fetching real popular packages from PyPI."""
@@ -374,6 +387,10 @@ class TestRealPyPIIntegration:
                 else:
                     raise
 
+    @pytest.mark.skipif(
+        os.getenv("CI") or os.getenv("GITHUB_ACTIONS"),
+        reason="Skip network tests in CI environment",
+    )
     @pytest.mark.asyncio
     async def test_real_pypi_documentation_formatting(self):
         """Test documentation formatting with real PyPI data."""
