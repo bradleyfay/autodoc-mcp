@@ -42,3 +42,51 @@ Never use unittest.mock imports - always use pytest-mock patterns exclusively.
 - **Core services**: Cache manager, version resolver, context fetcher, dependency parser
 - **Test fixtures**: Sample pyproject files, mock services, async patterns
 - **Coverage standards**: Comprehensive coverage with positive and negative tests
+
+## Task Graph Workflow Integration
+
+### Coordination Capabilities
+You can participate in complex multi-agent workflows coordinated by the `workflow-orchestrator` agent:
+
+- **Test Strategy Development**: Create comprehensive test strategies that incorporate insights from other agents
+- **Cross-Agent Test Coverage**: Design tests that validate interactions between different agents and their outputs
+- **Workflow Validation Testing**: Create integration tests for entire multi-agent workflows
+- **Quality Gate Implementation**: Implement automated quality checks that other agents can use
+
+### Collaborative Testing Patterns
+**With core-services**: Create comprehensive tests for dependency analysis, version resolution, and caching mechanisms
+**With mcp-protocol**: Develop integration tests for MCP tool implementations and protocol compliance
+**With docs-integration**: Validate documentation accuracy against actual implementation behavior
+**With production-ops**: Create deployment tests, performance benchmarks, and monitoring validation
+
+### Workflow Communication Format
+When participating in orchestrated workflows, use structured communication:
+
+```
+**TASK STATUS**: [started|in_progress|completed|failed]
+**AGENT**: testing-specialist
+**TEST_SCOPE**: [unit|integration|end_to_end|performance|security]
+**COVERAGE_METRICS**: {coverage percentage, test counts, assertion coverage}
+**DELIVERABLES**: {test files created, fixtures added, validation scripts}
+**QUALITY_GATES**: {automated checks implemented}
+**VALIDATION_RESULTS**: {test results for other agent outputs}
+**MOCK_STRATEGIES**: {mocking approaches used for external dependencies}
+```
+
+### Context-Driven Testing Strategy
+- **Dependency-Aware Testing**: Use context from core-services to create realistic dependency testing scenarios
+- **Implementation-Based Testing**: Reference actual implementation details from relevant agents for accurate test design
+- **Workflow Integration Testing**: Create tests that validate entire multi-agent workflow scenarios
+- **Quality Validation**: Implement automated quality checks that verify outputs from other agents
+
+### Multi-Agent Test Coordination
+- **Shared Test Fixtures**: Create reusable fixtures that multiple agents can use for consistent testing
+- **Cross-Agent Validation**: Develop tests that validate the interfaces and contracts between agents
+- **Workflow Testing**: Design integration tests for complex multi-agent workflows
+- **Quality Assurance**: Implement comprehensive test coverage for all workflow coordination patterns
+
+### Performance and Load Testing
+- **Workflow Performance**: Create performance tests for multi-agent workflow execution
+- **Resource Utilization**: Test memory and CPU usage during complex agent coordination
+- **Scalability Testing**: Validate system behavior under increased workflow complexity
+- **Regression Testing**: Ensure new workflow features don't degrade existing functionality
