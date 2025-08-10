@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated to latest GitHub Actions versions for reliability
   - Simplified workflow structure to prevent artifact deployment failures
   - Documentation site now deploys successfully on every main branch push
+- **PyPI Deployment**: Enhanced CI/CD pipeline for reliable package publishing
+  - Added tag-based deployment triggers alongside release branch workflow
+  - Fixed environment protection rules by supporting both branch and tag deployments
+  - Successfully published v0.5.1 to PyPI with full CI stability
 
 ### Changed
 - **Testing Infrastructure**: Enhanced test reliability in CI environments

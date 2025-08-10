@@ -57,12 +57,24 @@ git clone https://github.com/bradleyfay/autodoc-mcp.git
 cd autodoc-mcp
 uv sync --all-extras
 
-# Run tests (277 tests)
+# Run tests (400+ tests)
 uv run pytest
 
 # Start development server
 uv run python -m autodoc_mcp.main
 ```
+
+## 📚 Documentation
+
+**Comprehensive Documentation Site**: https://bradleyfay.github.io/autodoc-mcp/
+
+Our documentation features a **three-path architecture** designed for different user journeys:
+
+- **📚 [Product Documentation](https://bradleyfay.github.io/autodoc-mcp/product/)** - Installation, usage, and API reference for end users and integrators
+- **🏗️ [Development Process](https://bradleyfay.github.io/autodoc-mcp/development/)** - Architecture, standards, and contributing guidelines for developers
+- **📖 [Development Journey](https://bradleyfay.github.io/autodoc-mcp/journey/)** - Project evolution, learnings, and AI-assisted development insights
+
+The site features responsive design with dark/light mode toggle and is automatically updated with every release.
 
 ## 🔌 Usage
 
@@ -342,7 +354,7 @@ export MAX_CONCURRENT=5
 
 ## 🧪 Testing
 
-### Comprehensive Test Suite (277 Tests)
+### Comprehensive Test Suite (400+ Tests)
 ```bash
 # Run all tests
 uv run pytest
@@ -454,9 +466,9 @@ uv run python scripts/dev.py --help
 
 ## 📊 Project Statistics
 
-- **Version**: 0.3.4 (Phase 4 Complete)
+- **Version**: 0.5.1 (Production Ready with CI Stability)
 - **Architecture**: Layered with 10 core service modules
-- **Test Coverage**: 277 comprehensive tests
+- **Test Coverage**: 400+ comprehensive tests
 - **MCP Tools**: 8 production-ready tools
 - **Dependencies**: Minimal, production-focused
 - **Language Support**: Python (with plans for multi-language)
