@@ -33,7 +33,7 @@ class VersionResolver:
                     f"{config.pypi_base_url}/{package_name}/json",
                     headers={"Accept": "application/json"},
                 )
-                data = response.json()
+                data = await response.json()
             except PackageNotFoundError:
                 logger.error("Package not found", package=package_name)
                 raise
