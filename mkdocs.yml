@@ -1,8 +1,11 @@
 site_name: AutoDocs MCP Server
 site_description: Intelligent documentation context provider for AI assistants
 site_author: Bradley Fay
+site_url: https://bradleyfay.github.io/autodoc-mcp/
 repo_url: https://github.com/bradleyfay/autodoc-mcp
 repo_name: bradleyfay/autodoc-mcp
+edit_uri: edit/main/docs/
+strict: false
 
 nav:
   - Home: index.md
@@ -60,13 +63,19 @@ theme:
     - navigation.top
     - navigation.tracking
     - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+    - content.action.edit
+    - content.action.view
     - search.highlight
     - search.share
     - search.suggest
     - toc.follow
+    - toc.integrate
 
 plugins:
   - search:
@@ -74,9 +83,11 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: timeago
+      fallback_to_build_date: true
   - git-committers:
       repository: bradleyfay/autodoc-mcp
       branch: main
+      enabled: true
   - minify:
       minify_html: true
       minify_js: true

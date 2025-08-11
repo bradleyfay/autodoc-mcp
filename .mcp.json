@@ -6,6 +6,10 @@
       "env": {
         "CACHE_DIR": "~/.cache/autodoc-mcp"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
     }
   }
 }

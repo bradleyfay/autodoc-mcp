@@ -16,8 +16,9 @@ dependencies = [
     "tomlkit>=0.12.0",
     "pydantic>=2.0.0",
     "structlog>=23.2.0",
-    "packaging>=23.0",  # For version constraint parsing
+    "packaging>=23.0", # For version constraint parsing
     "click>=8.0.0",
+    "pillow>=11.3.0",
 ]
 
 [project.optional-dependencies]
@@ -30,9 +31,17 @@ dev = [
     "pytest-timeout>=2.1.0",  # Test timeout handling
     "pytest-httpx>=0.30.0",  # HTTP request mocking for httpx
     "pytest-randomly>=3.12.0",  # Randomize test order
+    "pytest-html>=4.1.0",  # HTML test reports
+    "pytest-json-report>=1.5.0",  # JSON test reports
     "ruff>=0.1.0",
     "mypy>=1.6.0",
     "pre-commit>=3.5.0",
+]
+docs-testing = [
+    "beautifulsoup4>=4.12.0",  # HTML parsing for content validation
+    "playwright>=1.40.0",  # Cross-platform browser testing
+    "httpx>=0.25.0",  # HTTP client for link validation
+    "pyyaml>=6.0",  # YAML validation for code blocks
 ]
 
 [project.scripts]
@@ -97,6 +106,14 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = [
     "asyncio: marks tests as async (deselect with '-m \"not asyncio\"')",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "external: marks tests that require external network access",
+    "browser: marks tests that require browser automation",
+]
+# Create separate test paths for different test types
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
 ]
 
 [tool.coverage.run]

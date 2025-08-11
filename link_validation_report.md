@@ -1,0 +1,157 @@
+# Link Validation Report
+Generated: 2025-08-11 13:39:00
+
+## Summary
+- **Total Links**: 51
+- **Broken Links**: 20
+- **Success Rate**: 60.8%
+
+## Internal Links
+- **Total**: 42
+- **Broken**: 20
+
+### Broken Internal Links
+- ❌ `../development/architecture.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/../development/architecture.md`
+    - `docs/../development/architecture.md/index.md`
+    - `docs/../development/architecture.md.md`
+- ❌ `../development/contributing.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/../development/contributing.md`
+    - `docs/../development/contributing.md/index.md`
+    - `docs/../development/contributing.md.md`
+- ❌ `../index.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/../index.md`
+    - `docs/../index.md/index.md`
+    - `docs/../index.md.md`
+- ❌ `../product/`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/../product`
+    - `docs/../product/index.md`
+    - `docs/../product/.md`
+- ❌ `../product/getting-started.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/../product/getting-started.md`
+    - `docs/../product/getting-started.md/index.md`
+    - `docs/../product/getting-started.md.md`
+- ❌ `/api-reference.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/api-reference.md`
+    - `docs/api-reference.md/index.md`
+    - `docs/api-reference.md.md`
+- ❌ `/architecture-diagram.png`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/architecture-diagram.png`
+    - `docs/architecture-diagram.png/index.md`
+    - `docs/architecture-diagram.png.md`
+- ❌ `/configuration.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/configuration.md`
+    - `docs/configuration.md/index.md`
+    - `docs/configuration.md.md`
+- ❌ `/explanation.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/explanation.md`
+    - `docs/explanation.md/index.md`
+    - `docs/explanation.md.md`
+- ❌ `/getting-started`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/getting-started`
+    - `docs/getting-started/index.md`
+    - `docs/getting-started.md`
+- ❌ `/getting-started.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/getting-started.md`
+    - `docs/getting-started.md/index.md`
+    - `docs/getting-started.md.md`
+- ❌ `/howto.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/howto.md`
+    - `docs/howto.md/index.md`
+    - `docs/howto.md.md`
+- ❌ `/installation.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/installation.md`
+    - `docs/installation.md/index.md`
+    - `docs/installation.md.md`
+- ❌ `/mcp-tools.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/mcp-tools.md`
+    - `docs/mcp-tools.md/index.md`
+    - `docs/mcp-tools.md.md`
+- ❌ `/phase-2-documentation-fetching.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/phase-2-documentation-fetching.md`
+    - `docs/phase-2-documentation-fetching.md/index.md`
+    - `docs/phase-2-documentation-fetching.md.md`
+- ❌ `/phases/phase-1-core-validation.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/phases/phase-1-core-validation.md`
+    - `docs/phases/phase-1-core-validation.md/index.md`
+    - `docs/phases/phase-1-core-validation.md.md`
+- ❌ `/reference.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/reference.md`
+    - `docs/reference.md/index.md`
+    - `docs/reference.md.md`
+- ❌ `/sessions.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/sessions.md`
+    - `docs/sessions.md/index.md`
+    - `docs/sessions.md.md`
+- ❌ `/troubleshooting.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/troubleshooting.md`
+    - `docs/troubleshooting.md/index.md`
+    - `docs/troubleshooting.md.md`
+- ❌ `/tutorial.md`
+  - Error: File not found
+  - Suggested fixes:
+    - `docs/tutorial.md`
+    - `docs/tutorial.md/index.md`
+    - `docs/tutorial.md.md`
+
+## External Links
+- **Total**: 9
+- **Broken**: 0
+- ✅ All external links are valid
+
+## Warnings
+- ⚠️ Link '../development/contributing.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../index.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../development/contributing.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../index.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../product/' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../development/contributing.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../index.md' in docs/DOCUMENTATION_LINKING_GUIDE.md points outside docs directory
+- ⚠️ Link '../development/architecture.md' in docs/content-audit-report.md points outside docs directory
+- ⚠️ Link '../development/architecture.md' in docs/content-audit-report.md points outside docs directory
+- ⚠️ Link '../product/getting-started.md' in docs/content-audit-report.md points outside docs directory
+- ⚠️ Link '../development/architecture.md' in docs/content-audit-report.md points outside docs directory
+
+## Recommendations
+- Fix broken internal links by checking file paths
+- Update or remove broken external links
+- Consider implementing link checking in CI/CD pipeline
+- Set up monitoring for external link health

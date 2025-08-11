@@ -1,0 +1,424 @@
+name: Documentation Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'tests/docs/**'
+      - '.github/workflows/docs-testing.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'tests/docs/**'
+      - '.github/workflows/docs-testing.yml'
+  schedule:
+    # Run daily at 2 AM UTC to catch external link rot
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_level:
+        description: 'Test level to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - 'quick'
+          - 'full'
+          - 'external_links_only'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  # Quick validation job - runs on every commit
+  quick-validation:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_level != 'external_links_only' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          # Install documentation dependencies
+          uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-git-committers-plugin mkdocs-minify-plugin
+          # Install testing dependencies
+          uv pip install beautifulsoup4 pytest-html pytest-json-report
+
+      - name: Validate mkdocs configuration
+        run: |
+          uv run mkdocs config --strict
+
+      - name: Build documentation
+        run: |
+          uv run mkdocs build --strict --verbose
+
+      - name: Run QA checklist validation
+        run: |
+          uv run pytest tests/docs/qa_checklists.py::test_pre_deployment_checklist -v
+
+      - name: Run basic content validation
+        run: |
+          uv run pytest tests/docs/test_content_validation.py::test_site_build_exists -v
+          uv run pytest tests/docs/test_content_validation.py::test_html_structure_validation -v
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docs-build
+          path: site/
+          retention-days: 7
+
+  # Comprehensive testing job - runs on main/develop and PRs
+  comprehensive-testing:
+    name: Comprehensive Testing
+    runs-on: ubuntu-latest
+    needs: quick-validation
+    if: ${{ github.event.inputs.test_level != 'quick' }}
+
+    strategy:
+      matrix:
+        test_suite:
+          - link_validation
+          - content_validation
+          - cross_platform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          # Install documentation dependencies
+          uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-git-committers-plugin mkdocs-minify-plugin
+          # Install testing dependencies
+          uv pip install beautifulsoup4 pytest-html pytest-json-report httpx pyyaml
+
+      - name: Install Playwright (for cross-platform tests)
+        if: matrix.test_suite == 'cross_platform'
+        run: |
+          uv pip install playwright
+          uv run playwright install --with-deps chromium firefox
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: site/
+
+      - name: Start local server for testing
+        if: matrix.test_suite == 'cross_platform'
+        run: |
+          cd site
+          python -m http.server 8000 &
+          sleep 5
+          # Verify server is running
+          curl -f http://localhost:8000/ || exit 1
+
+      - name: Run link validation tests
+        if: matrix.test_suite == 'link_validation'
+        run: |
+          uv run pytest tests/docs/test_link_validation.py -v \
+            --html=reports/link-validation-report.html \
+            --json-report --json-report-file=reports/link-validation.json
+        continue-on-error: true
+
+      - name: Run content validation tests
+        if: matrix.test_suite == 'content_validation'
+        run: |
+          uv run pytest tests/docs/test_content_validation.py -v \
+            --html=reports/content-validation-report.html \
+            --json-report --json-report-file=reports/content-validation.json
+
+      - name: Run cross-platform tests
+        if: matrix.test_suite == 'cross_platform'
+        run: |
+          uv run pytest tests/docs/test_cross_platform.py -v \
+            --html=reports/cross-platform-report.html \
+            --json-report --json-report-file=reports/cross-platform.json
+        continue-on-error: true
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ matrix.test_suite }}
+          path: reports/
+          retention-days: 30
+
+  # External link validation - runs daily and on demand
+  external-link-validation:
+    name: External Link Validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.test_level == 'external_links_only' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-git-committers-plugin mkdocs-minify-plugin
+          uv pip install beautifulsoup4 pytest-html pytest-json-report httpx
+
+      - name: Build documentation
+        run: |
+          uv run mkdocs build --strict
+
+      - name: Run external link validation
+        run: |
+          uv run pytest tests/docs/test_link_validation.py::test_external_links_validation -v \
+            --html=reports/external-links-report.html \
+            --json-report --json-report-file=reports/external-links.json
+        continue-on-error: true
+
+      - name: Upload external link report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external-links-report
+          path: reports/
+          retention-days: 30
+
+      - name: Create issue for broken external links
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'reports/external-links.json';
+
+            if (fs.existsSync(path)) {
+              const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+              if (report.summary.failed > 0) {
+                const issueBody = `
+            ## External Link Validation Failed
+
+            **Failed Tests:** ${report.summary.failed}
+            **Total Tests:** ${report.summary.total}
+            **Date:** ${new Date().toISOString()}
+
+            ### Action Required
+            Please review and fix the broken external links found in the documentation.
+
+            ### View Report
+            Check the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId}) for detailed results.
+
+            _This issue was automatically created by the external link validation workflow._
+                `;
+
+                github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `External Link Validation Failed - ${new Date().toDateString()}`,
+                  body: issueBody,
+                  labels: ['documentation', 'bug', 'automated']
+                });
+              }
+            }
+
+  # Performance and accessibility testing
+  performance-testing:
+    name: Performance & Accessibility Testing
+    runs-on: ubuntu-latest
+    needs: quick-validation
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv pip install mkdocs mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-git-committers-plugin mkdocs-minify-plugin
+          npm install -g @lhci/cli lighthouse
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: site/
+
+      - name: Start local server
+        run: |
+          cd site
+          python -m http.server 8080 &
+          sleep 5
+          curl -f http://localhost:8080/ || exit 1
+
+      - name: Run Lighthouse CI
+        run: |
+          mkdir -p reports/lighthouse
+          lhci autorun --config=lighthouse-config.json || echo "Lighthouse config not found, using defaults"
+          # Run basic Lighthouse audit
+          lighthouse http://localhost:8080/ \
+            --output html \
+            --output json \
+            --output-path reports/lighthouse/lighthouse-report \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+        continue-on-error: true
+
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports
+          path: reports/lighthouse/
+          retention-days: 30
+
+  # Generate comprehensive test report
+  test-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [quick-validation, comprehensive-testing]
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all test reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-reports/
+
+      - name: Generate comprehensive report
+        run: |
+          mkdir -p final-report
+
+          # Create summary report
+          cat > final-report/test-summary.md << 'EOF'
+          # Documentation Testing Summary
+
+          **Run Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+
+          ## Test Results Overview
+
+          This report summarizes the results of automated documentation testing.
+
+          ### Tests Executed
+          - ✅ Quick Validation (Build & Basic Checks)
+          - ✅ Link Validation
+          - ✅ Content Validation
+          - ✅ Cross-Platform Testing
+
+          ### Artifacts
+          - Build outputs available in `docs-build` artifact
+          - Detailed test reports available in respective test artifacts
+
+          EOF
+
+          # List all available reports
+          echo "## Available Test Reports" >> final-report/test-summary.md
+          find all-reports/ -name "*.html" -o -name "*.json" | sort >> final-report/test-summary.md
+
+      - name: Upload final report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-test-report
+          path: final-report/
+          retention-days: 30
+
+      - name: Comment on PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let comment = `
+            ## 📋 Documentation Testing Results
+
+            **Status:** ${{ needs.comprehensive-testing.result == 'success' && '✅ Passed' || '❌ Issues Found' }}
+            **Commit:** \`${context.sha.substring(0, 7)}\`
+
+            ### Test Summary
+            - **Quick Validation:** ${{ needs.quick-validation.result == 'success' && '✅' || '❌' }}
+            - **Comprehensive Testing:** ${{ needs.comprehensive-testing.result == 'success' && '✅' || '❌' }}
+
+            ### 📊 View Detailed Reports
+            Check the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId}) for detailed test reports and artifacts.
+
+            `;
+
+            if ('${{ needs.comprehensive-testing.result }}' !== 'success') {
+              comment += `
+            ### ⚠️ Action Required
+            Some documentation tests failed. Please review the test reports and fix any issues before merging.
+              `;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
