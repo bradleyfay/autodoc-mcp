@@ -18,7 +18,7 @@
       <li>Configuration options</li>
       <li>Troubleshooting guides</li>
     </ul>
-    <a href="product/index.md" class="btn-primary">Start Using AutoDocs →</a>
+    <a href="product/" class="btn-primary">Start Using AutoDocs →</a>
   </div>
 
   <div class="path-card development">
@@ -31,7 +31,7 @@
       <li>Testing strategies and requirements</li>
       <li>Contribution guidelines</li>
     </ul>
-    <a href="development/index.md" class="btn-secondary">Explore the Process →</a>
+    <a href="development/" class="btn-secondary">Explore the Process →</a>
   </div>
 
   <div class="path-card journey">
@@ -44,18 +44,18 @@
       <li>Development session insights</li>
       <li>AI-assisted development patterns</li>
     </ul>
-    <a href="journey/index.md" class="btn-accent">Follow the Journey →</a>
+    <a href="journey/" class="btn-accent">Follow the Journey →</a>
   </div>
 </div>
 
 ## 🚀 Quick Start
 
 !!! tip "New to AutoDocs?"
-    **For immediate usage**: Start with [Product Documentation](product/getting-started.md)
+    **For immediate usage**: Start with [Product Documentation](product/getting-started/)
 
-    **For contributing**: Check out [Development Process](development/contributing.md)
+    **For contributing**: Check out [Development Process](development/contributing/)
 
-    **For the full story**: Explore the [Development Journey](journey/evolution.md)
+    **For the full story**: Explore the [Development Journey](journey/evolution/)
 
 ### Installation (Quick)
 
@@ -114,9 +114,9 @@ AutoDocs MCP Server is a **fully implemented** Model Context Protocol (MCP) serv
 
 | Section | Best For | Key Content |
 |---------|----------|-------------|
-| **[📚 Product Docs](product/index.md)** | End users, integrators | Installation, usage, API reference, troubleshooting |
-| **[🏗️ Development Process](development/index.md)** | Contributors, reviewers | Architecture, standards, testing, contributing |
-| **[📖 Development Journey](journey/index.md)** | Learning enthusiasts | Project evolution, decisions, AI-development insights |
+| **[📚 Product Docs](product/)** | End users, integrators | Installation, usage, API reference, troubleshooting |
+| **[🏗️ Development Process](development/)** | Contributors, reviewers | Architecture, standards, testing, contributing |
+| **[📖 Development Journey](journey/)** | Learning enthusiasts | Project evolution, decisions, AI-development insights |
 
 ---
 
