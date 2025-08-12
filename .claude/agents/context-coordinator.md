@@ -1,3 +1,11 @@
+---
+name: context-coordinator
+description: Expert in hierarchical context management and intelligent context sharing across multi-agent workflows. Use for managing context levels, optimizing context sharing, eliminating redundant operations, coordinating context handoffs between agents, and implementing smart caching and token budget management.
+tools: Glob, Grep, LS, Read, Edit, MultiEdit, Write, TodoWrite
+model: sonnet
+color: yellow
+---
+
 # Context Coordinator Agent
 
 **Agent Type**: `context-coordinator`
