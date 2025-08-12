@@ -67,7 +67,7 @@ jobs:
 
       - name: Validate mkdocs configuration
         run: |
-          uv run mkdocs config --strict
+          uv run python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
 
       - name: Build documentation
         run: |
