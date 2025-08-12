@@ -9,22 +9,27 @@ strict: false
 
 nav:
   - Home: index.md
-  - 📚 Product Documentation:
-    - product/index.md
-    - Getting Started: product/getting-started.md
+  - 🚀 Getting Started:
+    - Quick Setup: product/getting-started.md
     - Installation: product/installation.md
+    - First API Call: product/first-api-call.md
+  - 📚 Documentation:
+    - product/index.md
     - MCP Tools: product/mcp-tools.md
     - Configuration: product/configuration.md
-    - Troubleshooting: product/troubleshooting.md
     - API Reference: product/api-reference.md
-  - 🏗️ Development Process:
+    - Troubleshooting: product/troubleshooting.md
+  - 🏗️ Development:
     - development/index.md
     - Architecture: development/architecture.md
-    - Development Standards: development/standards.md
-    - Testing Strategy: development/testing.md
     - Contributing: development/contributing.md
+    - Testing Strategy: development/testing.md
+    - Standards: development/standards.md
     - Technical Decisions: development/technical-decisions.md
-  - 📖 Development Journey:
+  - 🤖 Claude Code Agents:
+    - agents/index.md
+    - Claude Agent Builder: agents/claude-agent-builder.md
+  - 📖 Project Journey:
     - journey/index.md
     - Project Evolution: journey/evolution.md
     - Phase Completions:
@@ -42,18 +47,21 @@ theme:
   palette:
     # Palette toggle for light mode
     - scheme: default
-      primary: blue
-      accent: blue
+      primary: deep purple
+      accent: cyan
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # Palette toggle for dark mode
     - scheme: slate
-      primary: blue
-      accent: blue
+      primary: deep purple
+      accent: cyan
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.tabs
     - navigation.tabs.sticky
