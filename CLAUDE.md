@@ -309,6 +309,83 @@ This project strictly follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 ## Claude Code Instructions
 
+### Agent Selection Protocol
+
+**MANDATORY**: Before using any agent, Claude MUST:
+
+1. **Analyze task type** against available agent descriptions
+2. **Match task to specialized expertise** rather than defaulting to general-purpose
+3. **Consider multi-agent coordination** when tasks span multiple domains
+4. **Use agent-design-architect for**:
+   - Multi-agent system design
+   - Agent workflow optimization
+   - Agent collaboration patterns
+   - Agent architecture decisions
+
+#### Task-to-Agent Mapping Decision Tree
+
+**Multi-agent systems, agent workflows, agent architecture** → `agent-design-architect`
+- Designing new agents or agent systems
+- Optimizing agent collaboration patterns
+- Multi-agent workflow architecture
+- Agent system performance analysis
+
+**Documentation, APIs, integration guides** → `docs-integration`
+- Writing API documentation
+- Creating integration guides
+- Technical documentation structure
+- User onboarding materials
+
+**MCP protocol, tool schemas, server development** → `mcp-protocol`
+- MCP server implementation
+- MCP tool schema design
+- Protocol compliance issues
+- MCP client integrations
+
+**Testing, pytest, coverage, test automation** → `testing-specialist`
+- Writing comprehensive tests
+- Test infrastructure improvements
+- Coverage analysis and improvement
+- Test automation frameworks
+
+**Production deployment, monitoring, configuration** → `production-ops`
+- Deployment pipeline configuration
+- Production monitoring setup
+- Performance optimization
+- Infrastructure configuration
+
+**Core business logic, dependency resolution** → `core-services`
+- Business logic implementation
+- Service architecture design
+- Dependency management
+- Core feature development
+
+**Technical writing, documentation frameworks** → `technical-writer`
+- User-facing documentation
+- Tutorial and guide creation
+- Documentation strategy
+- Content structure optimization
+
+**Product strategy, feature prioritization** → `product-manager`
+- Feature requirement analysis
+- Product roadmap planning
+- User feedback integration
+- Strategic alignment
+
+**General coding, search, multi-step tasks** → `general-purpose`
+- Code implementation tasks
+- File searching and analysis
+- Multi-step development work
+- General problem solving
+
+#### Agent Selection Validation
+
+Before proceeding with any task, ask yourself:
+- Does this task involve designing or optimizing agent systems? → `agent-design-architect`
+- Does this task require domain-specific expertise? → Use appropriate specialist
+- Is this a complex, multi-faceted task? → Consider multiple agents or `general-purpose`
+- Would a specialist provide significantly better results? → Use the specialist
+
 ### Technical Debt Management
 
 **MANDATORY**: All technical debt MUST be documented using disciplined tracking strategies:
